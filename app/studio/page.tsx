@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ContentOpportunity } from '@/lib/supabase';
+import SamAssistant from '../components/SamAssistant';
 
 type MarketingFormat =
   | 'launch_email'
@@ -280,10 +281,10 @@ export default function ContentStudio() {
         </div>
       </header>
 
-      {/* Split Pane Layout */}
+      {/* 3-Column Layout: Editor | Critique | Sam */}
       <div className="flex h-[calc(100vh-220px)]">
         {/* Editor Pane */}
-        <div className="flex-1 flex flex-col border-r border-[#e9e9e7]">
+        <div className="w-1/3 flex flex-col border-r border-[#e9e9e7]">
           <div className="flex items-center justify-between px-6 py-3 border-b border-[#e9e9e7] bg-[#fbfbfa]">
             <div className="flex gap-6 text-xs font-medium">
               <span className="text-[#787774]">
@@ -322,7 +323,7 @@ export default function ContentStudio() {
         </div>
 
         {/* Critique Pane */}
-        <div className="w-[420px] flex flex-col bg-[#fbfbfa]">
+        <div className="w-1/3 flex flex-col bg-[#fbfbfa] border-r border-[#e9e9e7]">
           <div className="px-6 py-4 border-b border-[#e9e9e7] bg-white">
             <div className="flex items-center justify-between">
               <div>
@@ -358,6 +359,11 @@ export default function ContentStudio() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Sam Assistant Pane */}
+        <div className="w-1/3 flex flex-col">
+          <SamAssistant currentContent={content} format={format} />
         </div>
       </div>
     </main>
