@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ContentOpportunity } from '@/lib/supabase';
+import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
+import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import StatsWidget from './components/StatsWidget';
+import OpportunityFilters, { FilterState } from './components/OpportunityFilters';
+import ContentVariations from './components/ContentVariations';
 
 export default function Dashboard() {
   const [opportunities, setOpportunities] = useState<ContentOpportunity[]>([]);
@@ -16,18 +21,72 @@ export default function Dashboard() {
   const [generatedContent, setGeneratedContent] = useState<{
     [key: string]: { content: string; format: string };
   }>({});
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [quickScanOpen, setQuickScanOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    platform: 'all',
+    type: 'all',
+    minScore: 6,
+    dateRange: 'all',
+    search: '',
+  });
+  const [showVariations, setShowVariations] = useState<ContentOpportunity | null>(null);
 
   useEffect(() => {
     fetchOpportunities();
+  }, [filters]);
+
+  useEffect(() => {
     fetchScanStatus();
   }, []);
 
   const fetchOpportunities = async () => {
     try {
-      const response = await fetch('/api/opportunities?unused=true&limit=10&minScore=6');
+      const params = new URLSearchParams({
+        unused: 'true',
+        limit: '50',
+        minScore: filters.minScore.toString(),
+      });
+
+      if (filters.platform !== 'all') {
+        params.append('platform', filters.platform);
+      }
+      if (filters.type !== 'all') {
+        params.append('type', filters.type);
+      }
+
+      const response = await fetch(`/api/opportunities?${params.toString()}`);
       const data = await response.json();
       if (data.success) {
-        setOpportunities(data.opportunities);
+        let filtered = data.opportunities;
+
+        // Client-side filtering for date range
+        if (filters.dateRange !== 'all') {
+          const now = new Date();
+          const cutoff = new Date();
+          if (filters.dateRange === 'today') {
+            cutoff.setHours(0, 0, 0, 0);
+          } else if (filters.dateRange === 'week') {
+            cutoff.setDate(now.getDate() - 7);
+          } else if (filters.dateRange === 'month') {
+            cutoff.setMonth(now.getMonth() - 1);
+          }
+          filtered = filtered.filter((opp: ContentOpportunity) =>
+            new Date(opp.date_scanned) >= cutoff
+          );
+        }
+
+        // Client-side search filtering
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          filtered = filtered.filter((opp: ContentOpportunity) =>
+            opp.content_snippet?.toLowerCase().includes(searchLower) ||
+            opp.suggested_angle?.toLowerCase().includes(searchLower) ||
+            opp.hook?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        setOpportunities(filtered);
       }
     } catch (error) {
       console.error('Failed to fetch opportunities:', error);
@@ -104,6 +163,29 @@ export default function Dashboard() {
     alert('Copied. Now go post it.');
   };
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      meta: true,
+      description: 'Quick scan',
+      action: () => setQuickScanOpen(true),
+    },
+    {
+      key: '?',
+      description: 'Show shortcuts',
+      action: () => setShowShortcuts(true),
+    },
+    {
+      key: 'Escape',
+      description: 'Close modal',
+      action: () => {
+        setShowShortcuts(false);
+        setQuickScanOpen(false);
+      },
+    },
+  ]);
+
   return (
     <main className="min-h-screen bg-black text-white p-8">
       {/* Header */}
@@ -126,7 +208,7 @@ export default function Dashboard() {
       </header>
 
       {/* Action Bar */}
-      <div className="mb-8 flex gap-4">
+      <div className="mb-8 flex gap-4 items-center">
         <Link
           href="/scan"
           className="inline-block bg-[#DC2626] text-white px-8 py-4 text-lg font-bold hover:bg-[#B91C1C] transition-colors border-2 border-[#DC2626]"
@@ -139,7 +221,19 @@ export default function Dashboard() {
         >
           CONTENT STUDIO
         </Link>
+        <button
+          onClick={() => setShowShortcuts(true)}
+          className="ml-auto text-[#737373] hover:text-white font-mono text-sm transition-colors"
+        >
+          Press <kbd className="bg-[#262626] px-2 py-1 mx-1 border border-[#404040]">?</kbd> for shortcuts
+        </button>
       </div>
+
+      {/* Stats Widget */}
+      <StatsWidget />
+
+      {/* Filters */}
+      <OpportunityFilters onFilterChange={setFilters} />
 
       {/* Opportunities */}
       <section>
@@ -209,6 +303,13 @@ export default function Dashboard() {
                   </button>
 
                   <button
+                    onClick={() => setShowVariations(opp)}
+                    className="border-2 border-[#DC2626] text-[#DC2626] px-6 py-2 font-bold hover:bg-[#DC2626] hover:text-white transition-colors"
+                  >
+                    3 VARIATIONS
+                  </button>
+
+                  <button
                     onClick={() => handleMarkUsed(opp.id)}
                     className="border-2 border-[#262626] px-6 py-2 font-bold hover:border-white transition-colors"
                   >
@@ -240,6 +341,57 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+
+      {/* Content Variations Modal */}
+      {showVariations && (
+        <ContentVariations
+          opportunity={{
+            id: showVariations.id,
+            type: showVariations.opportunity_type,
+            platform: showVariations.platform,
+            description: showVariations.content_snippet || showVariations.suggested_angle,
+            viral_potential: showVariations.priority_score,
+            suggested_format: showVariations.suggested_format,
+            hook: showVariations.hook || '',
+            angle: showVariations.suggested_angle,
+            cta: showVariations.cta || 'Join the Brotherhood',
+          }}
+          format={showVariations.suggested_format}
+          onClose={() => setShowVariations(null)}
+        />
+      )}
+
+      {/* Quick Scan Modal */}
+      {quickScanOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setQuickScanOpen(false)}>
+          <div className="bg-black border-2 border-[#DC2626] max-w-2xl w-full mx-4 p-8" onClick={e => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold mb-4">QUICK SCAN</h2>
+            <p className="text-[#737373] mb-4">Paste content from any platform and hit Enter</p>
+            <textarea
+              className="w-full h-64 bg-[#0a0a0a] border-2 border-[#262626] p-4 text-white font-mono text-sm focus:outline-none focus:border-[#DC2626]"
+              placeholder="Paste content here..."
+              autoFocus
+            />
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => setQuickScanOpen(false)}
+                className="bg-[#DC2626] text-white px-6 py-2 font-bold hover:bg-[#B91C1C]"
+              >
+                ANALYZE
+              </button>
+              <button
+                onClick={() => setQuickScanOpen(false)}
+                className="border-2 border-[#262626] px-6 py-2 font-bold hover:border-white"
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
