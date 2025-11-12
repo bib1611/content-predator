@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { emailPatternLibrary } from '@/lib/email-patterns';
+import { personalPatternLibrary } from '@/lib/personal-patterns';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -68,6 +69,20 @@ OUTPUT THE FIXED CONTENT:`;
     // Otherwise, generate critique
     // Get reference patterns based on format
     let styleReference = '';
+    let personalReference = '';
+
+    // Check if this is Twitter/X content (tweets or threads)
+    const isTwitterContent = format.toLowerCase().includes('tweet') ||
+                             format.toLowerCase().includes('thread') ||
+                             format.toLowerCase().includes('twitter') ||
+                             format.toLowerCase().includes('x post');
+
+    if (isTwitterContent) {
+      // For Twitter content, use personal proven patterns from @SlayStupidity
+      personalReference = personalPatternLibrary.getCritiqueReference();
+    }
+
+    // Get email reference standards
     if (format === 'ben_settle_email' || format.toLowerCase().includes('ben settle')) {
       styleReference = emailPatternLibrary.getCritiqueReference('ben_settle');
     } else if (format === 'gary_halbert_letter' || format.toLowerCase().includes('gary halbert') || format.toLowerCase().includes('sales letter')) {
@@ -81,6 +96,12 @@ OUTPUT THE FIXED CONTENT:`;
 
 CONTENT TO CRITIQUE:
 ${content}
+
+${personalReference ? `
+${personalReference}
+
+This content will be posted to @SlayStupidity (24K followers). Compare it against YOUR PROVEN HIGH-PERFORMING CONTENT above.
+` : ''}
 
 ${styleReference ? `
 REFERENCE STANDARDS (from proven emails):
@@ -105,6 +126,7 @@ ${styleReference ? '- [How it deviates from proven patterns above]' : ''}
 
 **CONVERSION SCORE:** [1-10]/10
 ${styleReference ? '[Compare to proven examples - would this stand alongside them?]' : ''}
+${personalReference ? '\n**PREDICTED ENGAGEMENT:** [X-Y]% (based on pattern matching to your proven high-performers)\n**CONFIDENCE:** [High/Medium/Low] - [Reasoning]\n**MATCHED WINNING PATTERNS:** [List which of your proven patterns are present]\n**RED FLAGS:** [List which losing patterns are present - these have failed with your audience before]' : ''}
 
 **ONE-LINE VERDICT:**
 [Brutal, honest assessment in 10 words or less]

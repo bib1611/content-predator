@@ -1,0 +1,114 @@
+{
+  "account": "@SlayStupidity",
+  "followers": 24000,
+  "analysis_period": "Last 4 weeks (Oct-Nov 2025)",
+  "high_performers": [
+    {
+      "tweet_text": "Joseph of Arimathea took down a corpse. Hands still sticky with blood...",
+      "engagement_rate": 5.32,
+      "hook_type": "visceral_biblical",
+      "patterns": [
+        "Present tense narrative",
+        "Sensory details (sticky blood, cold skin)",
+        "Short punchy sentences",
+        "Sacred + shocking combination",
+        "Classical art amplification"
+      ],
+      "why_worked": "Combines shocking physical reality with sacred narrative. Creates cognitive dissonance between sanitized Christianity and brutal reality."
+    },
+    {
+      "tweet_text": "The more I read the Bible, the more I realize it's actually the best book ever.",
+      "engagement_rate": 10.34,
+      "hook_type": "simple_confession",
+      "patterns": [
+        "Single sentence",
+        "Authentic revelation",
+        "No theological jargon",
+        "Relatable discovery journey",
+        "Permission to state obvious"
+      ],
+      "why_worked": "Authenticity over sophistication. High reply rate suggests it sparked personal stories. Works because it's permission to state the obvious."
+    },
+    {
+      "tweet_text": "She's kissing His feet. The prostitute is kissing the rabbi's feet. With her mouth. Her hair. Her tears...",
+      "engagement_rate": 5.30,
+      "hook_type": "taboo_intimacy",
+      "patterns": [
+        "Progressive revelation",
+        "Repetition for emphasis",
+        "Sensory layering",
+        "Uncomfortable sacred intimacy",
+        "Forces confrontation with scandal"
+      ],
+      "why_worked": "Forces reader to confront scandalous intimacy of biblical grace. Repetition creates discomfort that mirrors Pharisees' reaction."
+    },
+    {
+      "tweet_text": "Everything God created, Satan twisted. Sex became porn, Children became burdens, Creation became climate...",
+      "engagement_rate": 6.29,
+      "hook_type": "pattern_framework",
+      "patterns": [
+        "Formula: [Good] became [Corrupt]",
+        "List format (highly shareable)",
+        "Each line independently quotable",
+        "Diagnostic not victim framing",
+        "Pattern recognition"
+      ],
+      "why_worked": "Provides mental framework for understanding chaos. Lists are shareable. Positions audience as diagnosticians."
+    }
+  ],
+  "low_performers": [
+    {
+      "tweet_text": "Your pastor just preached to a room full of people planning to ignore everything he said...",
+      "engagement_rate": 4.18,
+      "hook_type": "cynical_accusation",
+      "patterns": [
+        "Pessimistic without solution",
+        "Attacks both sides",
+        "No visual element",
+        "Complaint not diagnosis"
+      ],
+      "why_failed": "Too pessimistic. Attacks pastors AND congregants. No redemptive arc. Feels like complaint."
+    },
+    {
+      "tweet_text": "Someone at church said 'proverbs are the tiktoks of the bible' This is why your church is dying...",
+      "engagement_rate": 2.0,
+      "hook_type": "secondhand_outrage",
+      "patterns": [
+        "Reporting others' stupidity",
+        "Overused phrase (church dying)",
+        "No constructive element",
+        "Punching down"
+      ],
+      "why_failed": "Secondhand outrage feels petty. No solutions. Audience fatigued by church-criticism without redemption."
+    }
+  ],
+  "winning_patterns": [
+    "Biblical narratives with visceral, physical details",
+    "Simple confessions/realizations (no theological jargon)",
+    "Pattern interrupts (saying the unexpected)",
+    "List/framework formats (X became Y structure)",
+    "Classical religious art paired with provocative text",
+    "Short, punchy sentences with repetition",
+    "Honest vulnerability about cost/struggle",
+    "Diagnostic content (explaining cultural dysfunction)",
+    "Present tense, sensory language",
+    "Sacred + shocking combinations"
+  ],
+  "losing_patterns": [
+    "Vague questions without payoff",
+    "Secondhand outrage",
+    "Generic leadership advice",
+    "Link-only tweets",
+    "Purely negative criticism",
+    "Abstract propositions without stories",
+    "Attacks on audience",
+    "Incomplete thoughts"
+  ],
+  "optimal_structure": {
+    "hook": "Visceral image OR simple confession OR pattern interrupt",
+    "body": "Short sentences (1-3 sentences per paragraph). Progressive revelation. Sensory details.",
+    "tone": "Raw + reverent. Honest + hopeful. Diagnostic not despairing.",
+    "length": "50-280 characters for maximum engagement",
+    "visual": "Classical religious art amplifies message"
+  }
+}

@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { OpportunityAnalysis } from './analyzer';
 import { emailPatternLibrary } from './email-patterns';
+import { personalPatternLibrary } from './personal-patterns';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -251,78 +252,110 @@ CRITICAL REQUIREMENTS:
 `;
   },
 
-  long_tweet: (opp: OpportunityAnalysis) => `
-Generate a long-form standalone tweet for The Biblical Man (280+ characters).
+  long_tweet: (opp: OpportunityAnalysis) => {
+    const personalExamples = personalPatternLibrary.getTwitterExamplesForPrompt();
+    const patternSummary = personalPatternLibrary.getPatternSummaryForPrompt();
+    const optimalStructure = personalPatternLibrary.getOptimalStructure();
+
+    return `
+Generate a long-form standalone tweet for The Biblical Man (@SlayStupidity - 24K followers).
 
 OPPORTUNITY:
 ${opp.description}
 Hook: ${opp.hook}
 Angle: ${opp.angle}
 
-LONG TWEET STRUCTURE:
+${personalExamples}
 
-[Punchy hook - stops the scroll]
+${patternSummary}
 
-[2-3 sentences building tension or revealing truth]
+PROVEN OPTIMAL STRUCTURE (from your data):
+• Hook style: ${optimalStructure.hook}
+• Body structure: ${optimalStructure.body}
+• Tone: ${optimalStructure.tone}
+• Length: ${optimalStructure.length}
+• Visual element: ${optimalStructure.visual}
 
-[Biblical or historical parallel that drives it home]
+YOUR TWEET STRUCTURE:
 
-[The shift/solution]
+[Hook - Use one of your proven types: visceral biblical, simple confession, taboo intimacy, or pattern framework]
 
-[Specific benefit or call to action]
+[Body - Match your style: short punchy sentences, present tense, sensory details]
 
-${opp.cta}
+[Biblical or historical reference that shocks + sanctifies]
 
-Requirements:
-- 280-600 characters
-- Can stand alone (not thread)
-- Pattern interrupt opening
-- Biblical/historical reference
-- One clear point
-- End with action or provocative question
-- NO hashtags unless organic
-`,
+[The shift - diagnostic not victim framing]
 
-  thread_10x: (opp: OpportunityAnalysis) => `
-Generate a high-value Twitter thread (10-15 tweets) for The Biblical Man.
+${opp.cta ? `[CTA: ${opp.cta}]` : ''}
+
+CRITICAL REQUIREMENTS:
+- Match YOUR proven patterns above (not generic advice)
+- Must use at least 2 of your winning patterns
+- Avoid ALL of your losing patterns
+- Study the high-performer examples - replicate their structure
+- ${optimalStructure.length}
+- Tone: ${optimalStructure.tone}
+- If using biblical content: sensory details, present tense, sacred + shocking
+- NO secondhand outrage, NO vague questions, NO link-only
+`;
+  },
+
+  thread_10x: (opp: OpportunityAnalysis) => {
+    const personalExamples = personalPatternLibrary.getTwitterExamplesForPrompt();
+    const patternSummary = personalPatternLibrary.getPatternSummaryForPrompt();
+    const optimalStructure = personalPatternLibrary.getOptimalStructure();
+
+    return `
+Generate a high-value Twitter thread (10-15 tweets) for The Biblical Man (@SlayStupidity - 24K followers).
 
 OPPORTUNITY:
 ${opp.description}
 Angle: ${opp.angle}
 Hook: ${opp.hook}
 
-THREAD STRUCTURE:
+${personalExamples}
+
+${patternSummary}
+
+PROVEN OPTIMAL STRUCTURE (from your data):
+• Hook style: ${optimalStructure.hook}
+• Body structure: ${optimalStructure.body}
+• Tone: ${optimalStructure.tone}
+• Length per tweet: ${optimalStructure.length}
+
+THREAD STRUCTURE (using YOUR proven patterns):
 
 **Tweet 1 - Hook:**
-[Controversial statement + thread promise]
-[Number] things about [topic] that will [benefit]:
+[Use one of your proven hook types: visceral biblical, simple confession, taboo intimacy, or pattern framework]
+[Promise value]
 🧵
 
 **Tweet 2 - Set Context:**
-[Why this matters / the problem]
+[Why this matters - use diagnostic framing, not victim framing]
 
 **Tweets 3-11 - Value:**
-Each tweet = 1 specific insight with:
-- Number or label
-- Core insight
-- Why it matters
-- Specific example
+Each tweet should use YOUR winning patterns:
+- Short punchy sentences (1-3 per paragraph)
+- Present tense narrative when telling stories
+- Sensory details if biblical/historical
+- Pattern frameworks (X became Y structure)
+- Sacred + shocking combinations
 
 Format each as:
 [Number]. [Insight headline]
 
-[2-3 sentences explaining + example]
+[2-3 sentences with sensory details or pattern recognition]
 
-[Why this changes everything]
+[Why this changes everything - diagnostic angle]
 
 **Tweet 12 - Synthesis:**
 Here's what all this means:
-[Connect the dots]
+[Connect the dots - simple confession style]
 
-**Tweet 13 - Social Proof:**
-Real results:
-• [Result 1 with number]
-• [Result 2 with number]
+**Tweet 13 - Pattern Recognition:**
+[Use list/framework format that your audience loves]
+• [Pattern 1] became [corrupt version]
+• [Pattern 2] became [corrupt version]
 
 **Tweet 14 - Cost of Inaction:**
 Every day without [understanding] = [specific loss]
@@ -334,19 +367,21 @@ Ready to [transformation]?
 
 ${opp.cta}
 
-[Benefit or incentive]
+[Honest vulnerability about cost/struggle]
 
 Your move.
 
-Requirements:
-- 10-15 tweets minimum
-- Each tweet standalone valuable
-- Build to crescendo
-- Mix insights, examples, stories
-- Strong CTA
+CRITICAL REQUIREMENTS:
+- Each tweet ${optimalStructure.length}
+- Tone: ${optimalStructure.tone}
+- Use at least 5 of your proven winning patterns across the thread
+- Avoid ALL losing patterns (no secondhand outrage, no vague questions, no generic advice)
+- Study the high-performer examples above
+- If using biblical content: present tense + sensory details + sacred/shocking combo
 - NO numbering like "1/15"
 - Separate tweets with "---"
-`,
+`;
+  },
 
   landing_page: (opp: OpportunityAnalysis) => `
 Generate a conversion-focused landing page for The Biblical Man brand.
