@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { OpportunityAnalysis } from './analyzer';
+import { emailPatternLibrary } from './email-patterns';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -95,25 +96,31 @@ Requirements:
 - Grade 8 reading level
 `,
 
-  ben_settle_email: (opp: OpportunityAnalysis) => `
+  ben_settle_email: (opp: OpportunityAnalysis) => {
+    const benSettleReference = emailPatternLibrary.getBenSettleExampleForPrompt();
+    const patternSummary = emailPatternLibrary.getBenSettlePatternSummary();
+
+    return `
 Generate an email in Ben Settle's style for The Biblical Man brand.
 
 OPPORTUNITY:
 ${opp.description}
 Angle: ${opp.angle}
 
-BEN SETTLE STYLE RULES:
-- Short paragraphs (1-3 sentences max)
-- Contrarian take that pisses people off
-- Story that proves the point
-- Subtle product mention (if at all)
-- Email cliff - makes them want tomorrow's email
-- Zero selling in the traditional sense
-- Entertaining first, selling second
+${benSettleReference}
 
-STRUCTURE:
+BEN SETTLE CORE PATTERNS (from ${patternSummary.total_emails} actual emails):
+${patternSummary.style_characteristics.map(c => `✓ ${c}`).join('\n')}
 
-Subject: [Contrarian statement or story hook]
+PROVEN STRUCTURE (from real emails):
+${patternSummary.typical_structure}
+
+KEY TECHNIQUES TO USE:
+${patternSummary.key_techniques.slice(0, 5).map(t => `• ${t}`).join('\n')}
+
+YOUR EMAIL STRUCTURE:
+
+Subject: [Contrarian statement or story hook - study the example above]
 
 [Story opening - grab attention immediately]
 
@@ -145,33 +152,43 @@ More on that tomorrow.
 
 P.S. [Intriguing question or statement that sets up next email]
 
-Requirements:
+CRITICAL REQUIREMENTS:
+- Match the paragraph style from the example (1-3 sentences max)
 - Must be entertaining even without buying
-- Tease more value tomorrow
-- No desperate selling
+- Tease more value tomorrow (email cliff)
+- No desperate selling - confidence and abundance
 - Controversial but true
-- Story-driven
-`,
+- Story-driven with personal stakes
+- Weave product into story, never stop entertainment to pitch
+`;
+  },
 
-  gary_halbert_letter: (opp: OpportunityAnalysis) => `
+  gary_halbert_letter: (opp: OpportunityAnalysis) => {
+    const garyHalbertReference = emailPatternLibrary.getGaryHalbertExampleForPrompt();
+    const patternSummary = emailPatternLibrary.getGaryHalbertPatternSummary();
+
+    return `
 Generate a sales letter in Gary Halbert's style for The Biblical Man brand.
 
 OPPORTUNITY:
 ${opp.description}
 Angle: ${opp.angle}
 
-GARY HALBERT STYLE:
-- Start with attention-grabbing mechanism
-- "Reason why" copy - explain everything
-- Specificity over vagueness
-- Bullets that sell (feature + hidden benefit)
-- Conversational but commanding
-- Build massive desire before the ask
+${garyHalbertReference}
 
-LETTER STRUCTURE:
+GARY HALBERT CORE PATTERNS (from ${patternSummary.total_emails} actual letters):
+${patternSummary.style_characteristics.map(c => `✓ ${c}`).join('\n')}
+
+PROVEN STRUCTURE (from real letters):
+${patternSummary.typical_structure}
+
+KEY TECHNIQUES TO USE:
+${patternSummary.key_techniques.slice(0, 5).map(t => `• ${t}`).join('\n')}
+
+YOUR LETTER STRUCTURE:
 
 **Headline:**
-[Specific, bold claim with mechanism]
+[Specific, bold claim with mechanism - study the example above]
 "How [specific group] [achieved result] Using [unexpected method]"
 
 Dear Friend,
@@ -188,7 +205,7 @@ And here's why this matters NOW:
 
 **The [Method/System] That Changes Everything:**
 
-[Explain the core mechanism - be specific]
+[Explain the core mechanism - be VERY specific with numbers]
 
 Here's exactly what this means for you:
 
@@ -200,36 +217,39 @@ Here's exactly what this means for you:
 
 **Social Proof:**
 
-[Specific results from real people with numbers]
+[Specific results from real people with exact numbers and names]
 
 **The Investment:**
 
-[Price justification - compare to cost of problem]
+[Price justification - compare to cost of problem with specific numbers]
 
 **Guarantee:**
 
-[Strong, specific guarantee that flips the risk]
+[Strong, specific guarantee that completely flips the risk]
 
 **Order Now:**
 
 ${opp.cta}
 
-[Reason to act immediately]
+[Reason to act immediately - real urgency only]
 
 Your friend in [topic],
 
 [Signature]
 
-P.S. [Restate biggest benefit + urgency]
-P.P.S. [Address final objection]
+P.S. [Restate biggest benefit + urgency with numbers]
+P.P.S. [Address final objection with proof]
 
-Requirements:
-- Specific numbers everywhere
-- "Reason why" for everything
-- Conversational tone
-- Build massive desire
-- Clear mechanism explanation
-`,
+CRITICAL REQUIREMENTS:
+- Match the specificity level from the example (exact numbers everywhere)
+- "Reason why" explanation for every claim
+- Conversational but commanding tone (like talking to a friend)
+- Build MASSIVE desire before presenting price
+- Clear mechanism explanation (the "how" and "why" it works)
+- Strong risk reversal guarantee
+- Multiple P.S. sections that add value
+`;
+  },
 
   long_tweet: (opp: OpportunityAnalysis) => `
 Generate a long-form standalone tweet for The Biblical Man (280+ characters).
