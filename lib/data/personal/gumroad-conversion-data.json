@@ -1,0 +1,125 @@
+{
+  "high_converting_patterns": {
+    "title_formats": [
+      {
+        "pattern": "[Outcome] in [Timeframe]: The [Method] System",
+        "example": "Build Your First Product in 30 Days: The Biblical Man Method",
+        "conversion_impact": "High - Creates urgency + clear outcome"
+      },
+      {
+        "pattern": "The [Number]-Step [Outcome] Blueprint",
+        "example": "The 7-Step Masculine Leadership Blueprint",
+        "conversion_impact": "High - Specificity + clear structure"
+      },
+      {
+        "pattern": "How I [Achieved Result] (And You Can Too)",
+        "example": "How I Built a $10K/Month Ministry (And You Can Too)",
+        "conversion_impact": "Medium-High - Social proof + accessibility"
+      }
+    ],
+    "pricing_psychology": {
+      "sweet_spots": [9, 19, 27, 37, 47, 97],
+      "reasoning": "Odd numbers + just below psychological barriers",
+      "tier_strategy": {
+        "low_ticket": "Under $20 - Quick decision, impulse buy",
+        "mid_ticket": "$27-$47 - Serious but accessible",
+        "high_ticket": "$97+ - Premium positioning"
+      }
+    },
+    "pdf_structure": {
+      "high_converting_outline": [
+        "Cover Page (Strong visual + bold title)",
+        "Letter from Author (Personal story, 1-2 pages)",
+        "The Problem (Paint the pain, 2-3 pages)",
+        "The Method Overview (1 page summary)",
+        "Step-by-Step System (Core content, 10-20 pages)",
+        "Implementation Checklist (Actionable, 1-2 pages)",
+        "Bonus Resources (Links, templates, 1-2 pages)",
+        "Next Steps / Upsell Tease (1 page)"
+      ],
+      "page_count": {
+        "minimum": 15,
+        "optimal": 20-30,
+        "maximum": 50,
+        "reasoning": "Too short = low perceived value. Too long = won't finish."
+      }
+    },
+    "content_patterns": {
+      "hooks_that_convert": [
+        "Most [audience] waste [timeframe] on [problem]. Here's the shortcut.",
+        "I made every mistake so you don't have to. Here's what worked.",
+        "[Number] [audience members] asked me this. Here's the system I gave them.",
+        "This [method] took me from [before] to [after] in [timeframe]."
+      ],
+      "value_multipliers": [
+        "Checklists (high perceived value, low effort)",
+        "Templates (copy-paste solutions)",
+        "Scripts (exact words to use)",
+        "Case studies (proof it works)",
+        "Step-by-step walkthroughs (reduces overwhelm)"
+      ]
+    },
+    "sales_page_patterns": {
+      "headline_formula": "[Outcome] Without [Common Objection] (Even If [Worst Case Scenario])",
+      "bullet_structure": "Get [specific benefit] - [why it matters] - [how it helps]",
+      "guarantee": "90-day money back - if you don't [specific result], full refund",
+      "urgency": "Real only - limited spots, price increase, bonus expiring"
+    }
+  },
+  "proven_niches_for_biblical_man": [
+    {
+      "niche": "Masculine Leadership",
+      "product_ideas": [
+        "Biblical Leadership Framework (27-page PDF)",
+        "The 30-Day Masculine Reset (Daily guide)",
+        "Decision-Making System for Christian Men (Template pack)"
+      ],
+      "conversion_rate": "High - Core audience pain point"
+    },
+    {
+      "niche": "Marriage & Relationships",
+      "product_ideas": [
+        "The Christian Marriage Repair Kit (Action guide)",
+        "30 Conversations That Transform Marriage (Script guide)",
+        "Biblical Conflict Resolution Blueprint"
+      ],
+      "conversion_rate": "Very High - Urgent pain point"
+    },
+    {
+      "niche": "Purpose & Calling",
+      "product_ideas": [
+        "Find Your Kingdom Assignment (Workbook)",
+        "The Biblical Calling Clarity System",
+        "From Confusion to Mission: 21-Day Guide"
+      ],
+      "conversion_rate": "Medium-High - Aspirational"
+    },
+    {
+      "niche": "Spiritual Discipline",
+      "product_ideas": [
+        "The 6AM Warrior: Morning Routine Builder",
+        "Prayer That Gets Results (Framework)",
+        "Bible Study System for Busy Men"
+      ],
+      "conversion_rate": "Medium - Implementation required"
+    }
+  ],
+  "genspark_optimization": {
+    "prompt_structure": {
+      "section_1_context": "Set the tone, audience, and outcome",
+      "section_2_research": "Request specific data, case studies, biblical references",
+      "section_3_structure": "Exact outline with page counts",
+      "section_4_style": "Voice, tone, formatting requirements",
+      "section_5_deliverable": "PDF specs, design notes, file requirements"
+    },
+    "quality_requirements": [
+      "Zero fluff - every page must provide value",
+      "Action-oriented - tell them exactly what to do",
+      "Biblical grounding - scripture references throughout",
+      "Masculine tone - direct, confrontational when needed",
+      "Visual hierarchy - clear headings, bullets, white space",
+      "Scannable - can extract value in 10 minutes",
+      "Implementable - templates and checklists included"
+    ]
+  }
+}
