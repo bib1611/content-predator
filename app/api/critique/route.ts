@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import {
+  getProviderForCapability,
+  LLMCapability,
+} from '@/lib/llm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,26 +40,24 @@ INSTRUCTIONS:
 
 OUTPUT THE FIXED CONTENT:`;
 
-      const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        temperature: 0.7,
+      // Use critique-capable provider for applying fixes
+      const provider = getProviderForCapability(LLMCapability.CRITIQUE);
+
+      const response = await provider.complete({
         messages: [
           {
             role: 'user',
             content: fixPrompt,
           },
         ],
+        maxTokens: 4096,
+        temperature: 0.7,
+        capability: LLMCapability.CRITIQUE,
       });
-
-      const fixedContent = message.content[0];
-      if (fixedContent.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
 
       return NextResponse.json({
         success: true,
-        fixedContent: fixedContent.text.trim(),
+        fixedContent: response.content.trim(),
       });
     }
 
@@ -97,26 +94,24 @@ CRITIQUE RULES:
 - Call out jargon and BS
 `;
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      temperature: 0.7,
+    // Use critique-capable provider
+    const provider = getProviderForCapability(LLMCapability.CRITIQUE);
+
+    const response = await provider.complete({
       messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
+      maxTokens: 2048,
+      temperature: 0.7,
+      capability: LLMCapability.CRITIQUE,
     });
-
-    const critiqueContent = message.content[0];
-    if (critiqueContent.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
 
     return NextResponse.json({
       success: true,
-      critique: critiqueContent.text.trim(),
+      critique: response.content.trim(),
     });
 
   } catch (error) {

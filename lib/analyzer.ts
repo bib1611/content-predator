@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import {
+  getProviderForCapability,
+  LLMCapability,
+  type ILLMProvider,
+} from './llm';
 
 export interface OpportunityAnalysis {
   type: 'gap' | 'viral_format' | 'trending_topic';
@@ -83,25 +83,23 @@ Return ONLY valid JSON array. No markdown, no explanation, just the array:
 ]`;
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      temperature: 1,
+    // Use Kimi for deep thinking analysis, fallback to Anthropic
+    const provider = getProviderForCapability(LLMCapability.THINKING);
+
+    const response = await provider.complete({
       messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
+      maxTokens: 4096,
+      temperature: 1,
+      capability: LLMCapability.THINKING,
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-
     // Parse the JSON response
-    const responseText = content.text.trim();
+    const responseText = response.content.trim();
 
     // Remove markdown code blocks if present
     const jsonText = responseText
@@ -140,22 +138,27 @@ Return ONLY valid JSON array. No markdown, no explanation, just the array:
   }
 }
 
-export async function testClaudeConnection(): Promise<boolean> {
+export async function testLLMConnection(): Promise<boolean> {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 100,
+    // Test the primary analysis provider
+    const provider = getProviderForCapability(LLMCapability.THINKING);
+
+    const response = await provider.complete({
       messages: [
         {
           role: 'user',
           content: 'Respond with just the word "connected"',
         },
       ],
+      maxTokens: 100,
     });
 
-    return message.content[0].type === 'text';
+    return response.content.toLowerCase().includes('connected');
   } catch (error) {
-    console.error('Claude connection test failed:', error);
+    console.error('LLM connection test failed:', error);
     return false;
   }
 }
+
+// Backward compatibility
+export const testClaudeConnection = testLLMConnection;

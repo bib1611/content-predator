@@ -1,9 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
+import {
+  getProviderForCapability,
+  LLMCapability,
+} from './llm';
 import { OpportunityAnalysis } from './analyzer';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 export interface GeneratedContentResult {
   content: string;
@@ -152,24 +151,22 @@ export async function generateContent(
   const prompt = template(opportunity);
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: contentFormat === 'article' ? 4096 : 2048,
-      temperature: 1,
+    // Use the best provider for content generation
+    const provider = getProviderForCapability(LLMCapability.GENERATION);
+
+    const response = await provider.complete({
       messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
+      maxTokens: contentFormat === 'article' ? 4096 : 2048,
+      temperature: 1,
+      capability: LLMCapability.GENERATION,
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-
-    const generatedText = content.text.trim();
+    const generatedText = response.content.trim();
 
     // Extract hook (first line or tweet for threads)
     let hook = opportunity.hook;
@@ -216,24 +213,22 @@ ${CONTENT_TEMPLATES[format](opportunity)}
 `;
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: format === 'article' ? 4096 : 2048,
-      temperature: 1,
+    // Use the best provider for content generation
+    const provider = getProviderForCapability(LLMCapability.GENERATION);
+
+    const response = await provider.complete({
       messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
+      maxTokens: format === 'article' ? 4096 : 2048,
+      temperature: 1,
+      capability: LLMCapability.GENERATION,
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-
-    const generatedText = content.text.trim();
+    const generatedText = response.content.trim();
 
     let hook = opportunity.hook;
     if (format === 'thread') {

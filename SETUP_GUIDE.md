@@ -71,6 +71,74 @@ That's enough for:
 - 5-10 scans per day
 - 30-50 content generations per day
 
+## Step 2.5: Additional LLM Providers (Optional, 15 minutes)
+
+Content Predator now supports multiple LLM providers with intelligent routing! While Anthropic Claude is required, you can enhance capabilities by adding:
+
+### Kimi 2 (Moonshot AI) - Deep Thinking & Research
+
+**Best for:** Content opportunity analysis, long-context understanding, deep reasoning
+
+1. Go to [platform.moonshot.cn](https://platform.moonshot.cn)
+2. Sign up/login (supports international accounts)
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy the key and add to your `.env.local`:
+```bash
+KIMI_API_KEY=your_moonshot_api_key_here
+```
+
+**What you get:**
+- 128K context window for analyzing large amounts of social data
+- Superior deep reasoning for identifying content opportunities
+- Thinking mode for complex analysis tasks
+
+### Perplexity Max - Real-Time Web Research
+
+**Best for:** Current trends research, fact-checking, real-time information
+
+1. Go to [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+2. Sign up for API access (requires Pro subscription ~$20/month)
+3. Generate an API key
+4. Add to your `.env.local`:
+```bash
+PERPLEXITY_API_KEY=your_perplexity_api_key_here
+```
+
+**What you get:**
+- Real-time web search capabilities
+- Access to current events and trending topics
+- Citations from web sources
+
+### Cohere - Semantic Understanding
+
+**Best for:** Content generation, semantic analysis, classification
+
+1. Go to [dashboard.cohere.com](https://dashboard.cohere.com)
+2. Sign up (free tier available)
+3. Navigate to API Keys
+4. Create a new production key
+5. Add to your `.env.local`:
+```bash
+COHERE_API_KEY=your_cohere_api_key_here
+```
+
+**What you get:**
+- Alternative generation engine for content
+- Strong semantic understanding
+- Free tier: 1000 API calls/month
+
+### How Multi-Provider Routing Works
+
+The system automatically routes tasks to the best provider:
+
+- **Analysis/Thinking** → Kimi (fallback: Anthropic)
+- **Research/Trends** → Perplexity > Kimi > Anthropic
+- **Content Generation** → Anthropic > Cohere > Kimi
+- **Critique/Editing** → Anthropic > Cohere
+
+You can add providers incrementally - the system gracefully falls back to available providers.
+
 ## Step 3: Local Setup (5 minutes)
 
 ### Clone and Install
@@ -94,8 +162,14 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 
-# Anthropic (from Step 2)
+# Anthropic (from Step 2) - REQUIRED
 ANTHROPIC_API_KEY=sk-ant-your_key_here
+
+# Optional: Additional LLM Providers (from Step 2.5)
+# Uncomment and add keys for enhanced capabilities
+# KIMI_API_KEY=your_moonshot_api_key_here
+# PERPLEXITY_API_KEY=your_perplexity_api_key_here
+# COHERE_API_KEY=your_cohere_api_key_here
 
 # App Settings
 NEXT_PUBLIC_APP_URL=http://localhost:3000
