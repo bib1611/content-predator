@@ -1,23 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient, requireUser } from '@/lib/supabase-server';
+import { handleApiError, createSuccessResponse } from '@/lib/error-handler';
+import {
+  parseQueryParams,
+  opportunityUpdateSchema,
+  deleteOpportunitySchema
+} from '@/lib/validation';
+import { checkRateLimit, getRateLimitKey, rateLimitExceeded } from '@/lib/rate-limit';
 
-// GET all opportunities with filters
+/**
+ * GET /api/opportunities
+ * Fetch opportunities for authenticated user with filters
+ *
+ * Query params:
+ * - limit: number (1-100, default 10)
+ * - unused: boolean
+ * - minScore: number (0-100, default 0)
+ */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const unused = searchParams.get('unused') === 'true';
-    const minScore = parseInt(searchParams.get('minScore') || '0');
+    // Require authentication
+    const user = await requireUser();
 
-    let query = supabaseAdmin
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, user.id);
+    const rateLimit = checkRateLimit(rateLimitKey, 'opportunities');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        rateLimitExceeded(rateLimit.resetTime),
+        { status: 429 }
+      );
+    }
+
+    // Validate and parse query parameters
+    const params = parseQueryParams(request.nextUrl.searchParams);
+
+    // Get authenticated Supabase client (respects RLS)
+    const supabase = await createClient();
+
+    // Build query - RLS will automatically filter by user_id
+    let query = supabase
       .from('content_opportunities')
       .select('*')
-      .gte('priority_score', minScore)
+      .gte('priority_score', params.minScore)
       .order('priority_score', { ascending: false })
       .order('date_scanned', { ascending: false })
-      .limit(limit);
+      .limit(params.limit);
 
-    if (unused) {
+    if (params.unused) {
       query = query.eq('used', false);
     }
 
@@ -27,108 +58,124 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       success: true,
       count: data.length,
       opportunities: data,
     });
 
   } catch (error) {
-    console.error('Error fetching opportunities:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch opportunities',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Fetch opportunities');
   }
 }
 
-// PATCH to update opportunity (mark as used, etc.)
+/**
+ * PATCH /api/opportunities
+ * Update an opportunity (mark as used, change priority)
+ * Only allows updating opportunities owned by the authenticated user
+ */
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id, used, priority_score } = body as {
-      id: string;
-      used?: boolean;
-      priority_score?: number;
-    };
+    // Require authentication
+    const user = await requireUser();
 
-    if (!id) {
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, user.id);
+    const rateLimit = checkRateLimit(rateLimitKey, 'opportunities');
+
+    if (!rateLimit.success) {
       return NextResponse.json(
-        { error: 'Opportunity ID required' },
-        { status: 400 }
+        rateLimitExceeded(rateLimit.resetTime),
+        { status: 429 }
       );
     }
 
-    const updates: Record<string, any> = {};
-    if (typeof used === 'boolean') updates.used = used;
-    if (typeof priority_score === 'number') updates.priority_score = priority_score;
+    // Parse and validate request body
+    const body = await request.json();
+    const validated = opportunityUpdateSchema.parse(body);
 
-    const { data, error } = await supabaseAdmin
+    // Get authenticated Supabase client
+    const supabase = await createClient();
+
+    // Build update object
+    const updates: Record<string, any> = {};
+    if (validated.used !== undefined) updates.used = validated.used;
+    if (validated.priority_score !== undefined) updates.priority_score = validated.priority_score;
+
+    // Update opportunity - RLS ensures user owns this opportunity
+    const { data, error } = await supabase
       .from('content_opportunities')
       .update(updates)
-      .eq('id', id)
+      .eq('id', validated.id)
       .select()
       .single();
 
     if (error) {
+      // Check if error is because record doesn't exist or user doesn't own it
+      if (error.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Opportunity not found or you do not have permission to update it' },
+          { status: 404 }
+        );
+      }
       throw error;
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       success: true,
       opportunity: data,
     });
 
   } catch (error) {
-    console.error('Error updating opportunity:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to update opportunity',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Update opportunity');
   }
 }
 
-// DELETE opportunity
+/**
+ * DELETE /api/opportunities
+ * Delete an opportunity
+ * Only allows deleting opportunities owned by the authenticated user
+ */
 export async function DELETE(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
+    // Require authentication
+    const user = await requireUser();
 
-    if (!id) {
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, user.id);
+    const rateLimit = checkRateLimit(rateLimitKey, 'opportunities');
+
+    if (!rateLimit.success) {
       return NextResponse.json(
-        { error: 'Opportunity ID required' },
-        { status: 400 }
+        rateLimitExceeded(rateLimit.resetTime),
+        { status: 429 }
       );
     }
 
-    const { error } = await supabaseAdmin
+    // Validate query parameter
+    const searchParams = request.nextUrl.searchParams;
+    const id = searchParams.get('id');
+    const validated = deleteOpportunitySchema.parse({ id });
+
+    // Get authenticated Supabase client
+    const supabase = await createClient();
+
+    // Delete opportunity - RLS ensures user owns this opportunity
+    const { error } = await supabase
       .from('content_opportunities')
       .delete()
-      .eq('id', id);
+      .eq('id', validated.id);
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       success: true,
-      message: 'Opportunity deleted',
+      message: 'Opportunity deleted. Hunt for more.',
     });
 
   } catch (error) {
-    console.error('Error deleting opportunity:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to delete opportunity',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Delete opportunity');
   }
 }

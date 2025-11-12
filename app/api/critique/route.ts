@@ -1,36 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { requireUser } from '@/lib/supabase-server';
+import { handleApiError, createSuccessResponse } from '@/lib/error-handler';
+import { critiqueSchema } from '@/lib/validation';
+import { checkRateLimit, getRateLimitKey, rateLimitExceeded } from '@/lib/rate-limit';
+import { wrapUserInput, validateFeedback } from '@/lib/prompt-sanitizer';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Validate API key
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  throw new Error('Missing required environment variable: ANTHROPIC_API_KEY must be set');
+}
 
+const anthropic = new Anthropic({ apiKey });
+
+/**
+ * POST /api/critique
+ * Critique content or apply fixes from critique
+ * Most expensive endpoint - strict rate limiting
+ */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { content, format, applyFixes, critique } = body as {
-      content: string;
-      format: string;
-      applyFixes?: boolean;
-      critique?: string;
-    };
+    // Require authentication
+    const user = await requireUser();
 
-    if (!content) {
+    // Strict rate limiting (this is expensive - multiple Claude calls)
+    const rateLimitKey = getRateLimitKey(request, user.id);
+    const rateLimit = checkRateLimit(rateLimitKey, 'critique');
+
+    if (!rateLimit.success) {
       return NextResponse.json(
-        { error: 'No content provided' },
-        { status: 400 }
+        rateLimitExceeded(rateLimit.resetTime),
+        { status: 429 }
       );
     }
 
+    // Parse and validate request body
+    const body = await request.json();
+    const validated = critiqueSchema.parse(body);
+
     // If applyFixes is true, apply the critique fixes to the content
-    if (applyFixes && critique) {
+    if (validated.applyFixes && body.critique) {
+      // Validate critique doesn't contain suspicious patterns
+      const feedbackValidation = validateFeedback(body.critique);
+      if (!feedbackValidation.valid) {
+        return NextResponse.json(
+          { error: `Invalid critique: ${feedbackValidation.reason}` },
+          { status: 400 }
+        );
+      }
+
+      // Wrap user inputs to prevent prompt injection
+      const wrappedContent = wrapUserInput(validated.content, 'ORIGINAL CONTENT');
+      const wrappedCritique = wrapUserInput(body.critique, 'CRITIQUE WITH FIXES');
+
       const fixPrompt = `You are a copy editor implementing fixes. Apply ALL the suggested fixes from the critique to improve this content.
 
-ORIGINAL CONTENT:
-${content}
+${wrappedContent}
 
-CRITIQUE WITH FIXES:
-${critique}
+${wrappedCritique}
 
 INSTRUCTIONS:
 - Apply every fix mentioned in the critique
@@ -58,17 +86,20 @@ OUTPUT THE FIXED CONTENT:`;
         throw new Error('Unexpected response type from Claude');
       }
 
-      return NextResponse.json({
+      return createSuccessResponse({
         success: true,
         fixedContent: fixedContent.text.trim(),
       });
     }
 
     // Otherwise, generate critique
-    const prompt = `You are a brutal copy editor for direct-response marketing. Analyze this ${format} and provide actionable critique.
+    // Wrap user content to prevent prompt injection
+    const wrappedContent = wrapUserInput(validated.content, 'CONTENT TO CRITIQUE');
+    const formatLabel = validated.format || 'content';
 
-CONTENT TO CRITIQUE:
-${content}
+    const prompt = `You are a brutal copy editor for direct-response marketing. Analyze this ${formatLabel} and provide actionable critique.
+
+${wrappedContent}
 
 PROVIDE:
 
@@ -114,19 +145,12 @@ CRITIQUE RULES:
       throw new Error('Unexpected response type from Claude');
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       success: true,
       critique: critiqueContent.text.trim(),
     });
 
   } catch (error) {
-    console.error('Critique error:', error);
-    return NextResponse.json(
-      {
-        error: 'Critique failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Critique');
   }
 }

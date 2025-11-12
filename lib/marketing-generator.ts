@@ -1,9 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { OpportunityAnalysis } from './analyzer';
+import { sanitizeForPrompt } from './prompt-sanitizer';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Validate API key
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  throw new Error('Missing required environment variable: ANTHROPIC_API_KEY must be set');
+}
+
+const anthropic = new Anthropic({ apiKey });
 
 export type MarketingFormat =
   | 'launch_email'
@@ -28,9 +33,9 @@ const MARKETING_TEMPLATES = {
 Generate a direct-response launch email for The Biblical Man brand.
 
 OPPORTUNITY:
-${opp.description}
-Angle: ${opp.angle}
-Hook: ${opp.hook}
+${sanitizeForPrompt(opp.description)}
+Angle: ${sanitizeForPrompt(opp.angle)}
+Hook: ${sanitizeForPrompt(opp.hook)}
 
 BRAND VOICE:
 - Ben Settle / Gary Halbert style
@@ -591,7 +596,8 @@ Requirements:
 
 export async function generateMarketingContent(
   opportunity: OpportunityAnalysis,
-  format: MarketingFormat
+  format: MarketingFormat,
+  customInstructions?: string
 ): Promise<MarketingContent> {
   const template = MARKETING_TEMPLATES[format];
 
@@ -599,7 +605,12 @@ export async function generateMarketingContent(
     throw new Error(`Invalid marketing format: ${format}`);
   }
 
-  const prompt = template(opportunity);
+  let prompt = template(opportunity);
+
+  // Add custom instructions if provided (sanitized)
+  if (customInstructions) {
+    prompt += `\n\nADDITIONAL INSTRUCTIONS:\n${sanitizeForPrompt(customInstructions)}`;
+  }
 
   try {
     const maxTokens = ['sales_page', 'landing_page', 'gary_halbert_letter'].includes(format)

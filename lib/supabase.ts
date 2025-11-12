@@ -1,18 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Validate required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  throw new Error('Missing required Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set');
 }
 
+if (!supabaseServiceRoleKey) {
+  throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY must be set');
+}
+
+// Client-side Supabase client (respects RLS)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Server-side client with service role (use carefully)
+/**
+ * ADMIN CLIENT - USE WITH EXTREME CAUTION
+ *
+ * This client bypasses Row-Level Security (RLS) policies.
+ *
+ * DO NOT USE for user-facing operations. Instead:
+ * - For API routes: Use createClient() from lib/supabase-server.ts
+ * - For client components: Use supabase from this file
+ *
+ * Only use supabaseAdmin for:
+ * - System-level operations that truly need admin access
+ * - Background jobs and cron tasks
+ * - Operations that span multiple users
+ *
+ * NEVER use this in API routes that respond to user requests.
+ */
 export const supabaseAdmin = createClient(
   supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  supabaseServiceRoleKey,
   {
     auth: {
       autoRefreshToken: false,
@@ -24,6 +46,7 @@ export const supabaseAdmin = createClient(
 // Database types
 export interface ContentOpportunity {
   id: string;
+  user_id: string | null;
   date_scanned: string;
   platform: 'twitter' | 'substack';
   opportunity_type: 'gap' | 'viral_format' | 'trending_topic';

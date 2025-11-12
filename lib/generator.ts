@@ -1,9 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { OpportunityAnalysis } from './analyzer';
+import { sanitizeForPrompt, sanitizeJsonForPrompt, wrapUserInput, validateFeedback } from './prompt-sanitizer';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Validate API key
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  throw new Error('Missing required environment variable: ANTHROPIC_API_KEY must be set');
+}
+
+const anthropic = new Anthropic({ apiKey });
 
 export interface GeneratedContentResult {
   content: string;
@@ -17,10 +22,10 @@ const CONTENT_TEMPLATES = {
 Generate a single confrontational tweet for The Biblical Man brand.
 
 OPPORTUNITY CONTEXT:
-Type: ${opportunity.type}
-Description: ${opportunity.description}
-Angle: ${opportunity.angle}
-Suggested Hook: ${opportunity.hook}
+Type: ${sanitizeForPrompt(opportunity.type)}
+Description: ${sanitizeForPrompt(opportunity.description)}
+Angle: ${sanitizeForPrompt(opportunity.angle)}
+Suggested Hook: ${sanitizeForPrompt(opportunity.hook)}
 
 BRAND VOICE:
 - Confrontational, not soft
@@ -38,7 +43,7 @@ REQUIREMENTS:
 - NO hashtags unless organically part of the message
 - NO soft language ("maybe", "consider", "perhaps")
 
-CTA to include: ${opportunity.cta}
+CTA to include: ${sanitizeForPrompt(opportunity.cta)}
 
 Return ONLY the tweet text. No quotes, no explanation, just the raw tweet.
 `,
@@ -47,10 +52,10 @@ Return ONLY the tweet text. No quotes, no explanation, just the raw tweet.
 Generate a Twitter thread (6-8 tweets) for The Biblical Man brand.
 
 OPPORTUNITY CONTEXT:
-Type: ${opportunity.type}
-Description: ${opportunity.description}
-Angle: ${opportunity.angle}
-Suggested Hook: ${opportunity.hook}
+Type: ${sanitizeForPrompt(opportunity.type)}
+Description: ${sanitizeForPrompt(opportunity.description)}
+Angle: ${sanitizeForPrompt(opportunity.angle)}
+Suggested Hook: ${sanitizeForPrompt(opportunity.hook)}
 
 BRAND VOICE:
 - Confrontational and visceral
@@ -65,7 +70,7 @@ THREAD STRUCTURE:
 4. Historical parallel: Example from history or biblical narrative
 5. Modern application: What this means TODAY for the reader
 6. Binary choice: Two paths - no middle ground
-7. CTA: ${opportunity.cta}
+7. CTA: ${sanitizeForPrompt(opportunity.cta)}
 
 REQUIREMENTS:
 - Each tweet stands alone but builds on previous
@@ -88,10 +93,10 @@ Modern churches teach "servant leadership" but what they mean is "be her butler 
 Generate a Substack article outline and opening for The Biblical Man brand.
 
 OPPORTUNITY CONTEXT:
-Type: ${opportunity.type}
-Description: ${opportunity.description}
-Angle: ${opportunity.angle}
-Suggested Hook: ${opportunity.hook}
+Type: ${sanitizeForPrompt(opportunity.type)}
+Description: ${sanitizeForPrompt(opportunity.description)}
+Angle: ${sanitizeForPrompt(opportunity.angle)}
+Suggested Hook: ${sanitizeForPrompt(opportunity.hook)}
 
 BRAND VOICE:
 - Long-form confrontational writing
@@ -199,16 +204,26 @@ export async function regenerateWithFeedback(
   feedback: string,
   format: 'tweet' | 'thread' | 'article'
 ): Promise<GeneratedContentResult> {
+  // Validate feedback for suspicious patterns
+  const feedbackValidation = validateFeedback(feedback);
+  if (!feedbackValidation.valid) {
+    throw new Error(`Invalid feedback: ${feedbackValidation.reason}`);
+  }
+
+  // Wrap user inputs to prevent prompt injection
+  const wrappedPreviousContent = wrapUserInput(previousContent, 'PREVIOUS CONTENT');
+  const wrappedFeedback = wrapUserInput(feedback, 'USER FEEDBACK');
+  const sanitizedOpportunity = sanitizeJsonForPrompt(opportunity);
+
   const prompt = `
 You previously generated this content for The Biblical Man:
 
-${previousContent}
+${wrappedPreviousContent}
 
-USER FEEDBACK:
-${feedback}
+${wrappedFeedback}
 
 ORIGINAL OPPORTUNITY:
-${JSON.stringify(opportunity, null, 2)}
+${sanitizedOpportunity}
 
 Regenerate the ${format} incorporating the feedback while maintaining the confrontational Biblical Man voice.
 

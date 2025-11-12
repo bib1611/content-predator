@@ -1,7 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+// Validate required environment variable
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  throw new Error('Missing required environment variable: ANTHROPIC_API_KEY must be set');
+}
+
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey,
 });
 
 export interface OpportunityAnalysis {
@@ -24,6 +30,14 @@ export interface ScanData {
 }
 
 export async function analyzeContentOpportunity(data: ScanData): Promise<OpportunityAnalysis[]> {
+  // Import prompt sanitization (dynamic to avoid circular deps)
+  const { wrapUserInput } = await import('./prompt-sanitizer');
+
+  // Wrap user inputs to prevent prompt injection
+  const wrappedNotifications = wrapUserInput(data.notifications, 'NOTIFICATIONS DATA');
+  const wrappedTrending = wrapUserInput(data.trendingPosts, 'TRENDING POSTS');
+  const wrappedComments = wrapUserInput(data.substackComments, 'SUBSTACK ENGAGEMENT');
+
   const prompt = `You are analyzing social media signals for The Biblical Man brand.
 
 BRAND CONTEXT:
@@ -32,14 +46,11 @@ BRAND CONTEXT:
 - Style: Pattern interrupt hooks, biblical truth that challenges comfortable Christianity
 - Goal: Drive engagement and conversions to paid products
 
-NOTIFICATIONS DATA:
-${data.notifications}
+${wrappedNotifications}
 
-TRENDING POSTS:
-${data.trendingPosts}
+${wrappedTrending}
 
-SUBSTACK ENGAGEMENT:
-${data.substackComments}
+${wrappedComments}
 
 ANALYSIS TASK:
 Identify content opportunities in these categories:
@@ -100,7 +111,7 @@ Return ONLY valid JSON array. No markdown, no explanation, just the array:
       throw new Error('Unexpected response type from Claude');
     }
 
-    // Parse the JSON response
+    // Parse the JSON response with error handling
     const responseText = content.text.trim();
 
     // Remove markdown code blocks if present
@@ -110,12 +121,30 @@ Return ONLY valid JSON array. No markdown, no explanation, just the array:
       .replace(/```\s*$/, '')
       .trim();
 
-    const opportunities: OpportunityAnalysis[] = JSON.parse(jsonText);
+    let opportunities: OpportunityAnalysis[];
+
+    try {
+      opportunities = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error('Failed to parse Claude response as JSON:', parseError);
+      console.error('Response text:', jsonText.substring(0, 500));
+      throw new Error('Invalid JSON response from Claude. The AI response could not be parsed.');
+    }
 
     // Validate the response
     if (!Array.isArray(opportunities)) {
-      throw new Error('Response is not an array');
+      throw new Error('Response is not an array. Expected an array of opportunities.');
     }
+
+    // Validate each opportunity has required fields
+    opportunities = opportunities.filter(opp => {
+      const hasRequired = opp.type && opp.platform && opp.viral_potential &&
+                         opp.suggested_format && opp.hook && opp.angle && opp.cta;
+      if (!hasRequired) {
+        console.warn('Skipping invalid opportunity:', opp);
+      }
+      return hasRequired;
+    });
 
     // Filter and validate each opportunity
     return opportunities
