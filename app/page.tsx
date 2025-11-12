@@ -31,6 +31,8 @@ export default function Dashboard() {
     search: '',
   });
   const [showVariations, setShowVariations] = useState<ContentOpportunity | null>(null);
+  const [selectedOpps, setSelectedOpps] = useState<Set<string>>(new Set());
+  const [bulkGenerating, setBulkGenerating] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
@@ -139,10 +141,46 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Generation failed:', error);
-      alert('Generation failed. Try again or quit whining.');
+      alert('Generation failed. Try again.');
     } finally {
       setGeneratingId(null);
     }
+  };
+
+  const handleBulkGenerate = async () => {
+    if (selectedOpps.size === 0) return;
+
+    setBulkGenerating(true);
+    const selectedArray = Array.from(selectedOpps);
+
+    for (let i = 0; i < selectedArray.length; i++) {
+      const oppId = selectedArray[i];
+      const opp = opportunities.find(o => o.id === oppId);
+      if (opp) {
+        await handleGenerate(opp);
+      }
+    }
+
+    setBulkGenerating(false);
+    setSelectedOpps(new Set());
+  };
+
+  const toggleSelectOpp = (id: string) => {
+    const newSelected = new Set(selectedOpps);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedOpps(newSelected);
+  };
+
+  const selectAll = () => {
+    setSelectedOpps(new Set(opportunities.map(o => o.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedOpps(new Set());
   };
 
   const handleMarkUsed = async (id: string) => {
@@ -160,7 +198,7 @@ export default function Dashboard() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Copied. Now go post it.');
+    alert('Copied to clipboard!');
   };
 
   // Keyboard shortcuts
@@ -187,160 +225,229 @@ export default function Dashboard() {
   ]);
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
+    <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b-2 border-[#262626] pb-6 mb-8">
-        <h1 className="text-4xl font-bold mb-2 tracking-tight">CONTENT PREDATOR</h1>
-        <p className="text-[#737373] text-lg">Hunt for blood in the digital wasteland</p>
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Content Predator</h1>
+              <p className="text-gray-600 text-sm mt-1">AI-powered content intelligence for high-performance creators</p>
+            </div>
 
-        {scanStatus && (
-          <div className="mt-4 flex items-center gap-4 text-sm font-mono">
-            <span className="text-[#737373]">
-              SCANS TODAY: <span className="text-white">{scanStatus.scans_today}/{scanStatus.daily_limit}</span>
-            </span>
-            <span className="text-[#737373]">
-              REMAINING: <span className={scanStatus.scans_remaining > 0 ? 'text-[#DC2626]' : 'text-[#737373]'}>
-                {scanStatus.scans_remaining}
-              </span>
-            </span>
+            {scanStatus && (
+              <div className="flex items-center gap-6 text-sm">
+                <div className="text-right">
+                  <div className="text-gray-500 text-xs">Scans Today</div>
+                  <div className="text-gray-900 font-semibold">{scanStatus.scans_today}/{scanStatus.daily_limit}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-gray-500 text-xs">Remaining</div>
+                  <div className={`font-semibold ${scanStatus.scans_remaining > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    {scanStatus.scans_remaining}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </header>
 
-      {/* Action Bar */}
-      <div className="mb-8 flex gap-4 items-center">
-        <Link
-          href="/scan"
-          className="inline-block bg-[#DC2626] text-white px-8 py-4 text-lg font-bold hover:bg-[#B91C1C] transition-colors border-2 border-[#DC2626]"
-        >
-          HUNT FOR BLOOD
-        </Link>
-        <Link
-          href="/studio"
-          className="inline-block border-2 border-[#DC2626] text-[#DC2626] px-8 py-4 text-lg font-bold hover:bg-[#DC2626] hover:text-white transition-colors"
-        >
-          CONTENT STUDIO
-        </Link>
-        <button
-          onClick={() => setShowShortcuts(true)}
-          className="ml-auto text-[#737373] hover:text-white font-mono text-sm transition-colors"
-        >
-          Press <kbd className="bg-[#262626] px-2 py-1 mx-1 border border-[#404040]">?</kbd> for shortcuts
-        </button>
-      </div>
-
-      {/* Stats Widget */}
-      <StatsWidget />
-
-      {/* Filters */}
-      <OpportunityFilters onFilterChange={setFilters} />
-
-      {/* Opportunities */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6 border-b border-[#262626] pb-2">
-          TOP OPPORTUNITIES
-        </h2>
-
-        {loading ? (
-          <div className="text-[#737373] font-mono">Loading opportunities...</div>
-        ) : opportunities.length === 0 ? (
-          <div className="border-2 border-[#262626] p-8 text-center">
-            <p className="text-[#737373] text-lg mb-4">
-              Nothing worth your time. Hunt harder.
-            </p>
+          {/* Action Bar */}
+          <div className="flex gap-3 items-center">
             <Link
               href="/scan"
-              className="inline-block bg-[#DC2626] text-white px-6 py-3 font-bold hover:bg-[#B91C1C] transition-colors"
+              className="bg-red-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-sm"
             >
-              RUN SCAN
+              Scan for Opportunities
             </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {opportunities.map((opp) => (
-              <div
-                key={opp.id}
-                className="border-2 border-[#262626] p-6 hover:border-[#DC2626] transition-colors"
+            <Link
+              href="/studio"
+              className="border border-gray-300 bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Content Studio
+            </Link>
+
+            {selectedOpps.size > 0 && (
+              <>
+                <button
+                  onClick={handleBulkGenerate}
+                  disabled={bulkGenerating}
+                  className="ml-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
+                >
+                  {bulkGenerating ? `Generating ${selectedOpps.size}...` : `Generate ${selectedOpps.size} Selected`}
+                </button>
+                <button
+                  onClick={deselectAll}
+                  className="border border-gray-300 bg-white text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Deselect All
+                </button>
+              </>
+            )}
+
+            {selectedOpps.size === 0 && opportunities.length > 0 && (
+              <button
+                onClick={selectAll}
+                className="ml-auto border border-gray-300 bg-white text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-[#DC2626] font-bold font-mono text-2xl">
-                        {opp.priority_score}/10
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.opportunity_type}
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.platform}
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.suggested_format}
-                      </span>
-                    </div>
+                Select All
+              </button>
+            )}
 
-                    <h3 className="text-xl font-bold mb-2">{opp.hook}</h3>
-                    <p className="text-[#737373] mb-3">{opp.suggested_angle}</p>
-
-                    {opp.content_snippet && (
-                      <div className="bg-[#0a0a0a] border border-[#262626] p-3 mb-3 font-mono text-sm">
-                        {opp.content_snippet}
-                      </div>
-                    )}
-
-                    <p className="text-sm text-[#DC2626] font-bold">{opp.cta}</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => handleGenerate(opp)}
-                    disabled={generatingId === opp.id}
-                    className="bg-[#DC2626] text-white px-6 py-2 font-bold hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
-                  >
-                    {generatingId === opp.id ? 'WEAPONIZING...' : 'WEAPONIZE THIS'}
-                  </button>
-
-                  <button
-                    onClick={() => setShowVariations(opp)}
-                    className="border-2 border-[#DC2626] text-[#DC2626] px-6 py-2 font-bold hover:bg-[#DC2626] hover:text-white transition-colors"
-                  >
-                    3 VARIATIONS
-                  </button>
-
-                  <button
-                    onClick={() => handleMarkUsed(opp.id)}
-                    className="border-2 border-[#262626] px-6 py-2 font-bold hover:border-white transition-colors"
-                  >
-                    MARK USED
-                  </button>
-                </div>
-
-                {/* Generated Content */}
-                {generatedContent[opp.id] && (
-                  <div className="mt-6 border-t-2 border-[#262626] pt-6">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-lg font-bold text-[#DC2626]">
-                        GENERATED {generatedContent[opp.id].format.toUpperCase()}
-                      </h4>
-                      <button
-                        onClick={() => copyToClipboard(generatedContent[opp.id].content)}
-                        className="bg-[#262626] px-4 py-2 text-sm font-bold hover:bg-[#737373] transition-colors"
-                      >
-                        COPY
-                      </button>
-                    </div>
-                    <div className="bg-[#0a0a0a] border border-[#262626] p-4 font-mono text-sm whitespace-pre-wrap">
-                      {generatedContent[opp.id].content}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+            >
+              Press <kbd className="bg-gray-100 px-2 py-1 rounded border border-gray-300 text-xs">?</kbd> for shortcuts
+            </button>
           </div>
-        )}
-      </section>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Stats Widget */}
+        <StatsWidget />
+
+        {/* Filters */}
+        <OpportunityFilters onFilterChange={setFilters} />
+
+        {/* Opportunities */}
+        <section className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Top Opportunities
+              {opportunities.length > 0 && (
+                <span className="ml-2 text-gray-500 text-base font-normal">
+                  ({opportunities.length})
+                </span>
+              )}
+            </h2>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              <p className="text-gray-600 mt-3">Loading opportunities...</p>
+            </div>
+          ) : opportunities.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center shadow-sm">
+              <div className="text-gray-400 text-5xl mb-4">🎯</div>
+              <p className="text-gray-900 text-lg font-semibold mb-2">
+                No opportunities found
+              </p>
+              <p className="text-gray-600 mb-6">
+                Run a scan to discover content opportunities
+              </p>
+              <Link
+                href="/scan"
+                className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-sm"
+              >
+                Run Your First Scan
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {opportunities.map((opp) => (
+                <div
+                  key={opp.id}
+                  className={`bg-white border rounded-xl p-6 hover:shadow-md transition-all ${
+                    selectedOpps.has(opp.id)
+                      ? 'border-blue-500 ring-2 ring-blue-100'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex gap-4">
+                    {/* Checkbox */}
+                    <div className="flex-shrink-0 pt-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedOpps.has(opp.id)}
+                        onChange={() => toggleSelectOpp(opp.id)}
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-red-600 font-bold text-2xl">
+                            {opp.priority_score}/10
+                          </span>
+                          <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium text-gray-700 uppercase">
+                            {opp.opportunity_type}
+                          </span>
+                          <span className="bg-blue-50 px-3 py-1 rounded-full text-xs font-medium text-blue-700 uppercase">
+                            {opp.platform}
+                          </span>
+                          <span className="bg-purple-50 px-3 py-1 rounded-full text-xs font-medium text-purple-700 uppercase">
+                            {opp.suggested_format}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{opp.hook}</h3>
+                      <p className="text-gray-600 mb-3">{opp.suggested_angle}</p>
+
+                      {opp.content_snippet && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3 text-sm text-gray-700">
+                          {opp.content_snippet}
+                        </div>
+                      )}
+
+                      <p className="text-sm text-red-600 font-semibold mb-4">{opp.cta}</p>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleGenerate(opp)}
+                          disabled={generatingId === opp.id}
+                          className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 shadow-sm"
+                        >
+                          {generatingId === opp.id ? 'Generating...' : 'Generate Content'}
+                        </button>
+
+                        <button
+                          onClick={() => setShowVariations(opp)}
+                          className="border border-blue-600 text-blue-600 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+                        >
+                          3 Variations
+                        </button>
+
+                        <button
+                          onClick={() => handleMarkUsed(opp.id)}
+                          className="border border-gray-300 text-gray-700 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                        >
+                          Mark Used
+                        </button>
+                      </div>
+
+                      {/* Generated Content */}
+                      {generatedContent[opp.id] && (
+                        <div className="mt-4 border-t border-gray-200 pt-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                              Generated {generatedContent[opp.id].format}
+                            </h4>
+                            <button
+                              onClick={() => copyToClipboard(generatedContent[opp.id].content)}
+                              className="bg-gray-100 px-4 py-1.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-colors"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-800 whitespace-pre-wrap font-mono">
+                            {generatedContent[opp.id].content}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
@@ -366,27 +473,27 @@ export default function Dashboard() {
 
       {/* Quick Scan Modal */}
       {quickScanOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setQuickScanOpen(false)}>
-          <div className="bg-black border-2 border-[#DC2626] max-w-2xl w-full mx-4 p-8" onClick={e => e.stopPropagation()}>
-            <h2 className="text-2xl font-bold mb-4">QUICK SCAN</h2>
-            <p className="text-[#737373] mb-4">Paste content from any platform and hit Enter</p>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setQuickScanOpen(false)}>
+          <div className="bg-white rounded-xl max-w-2xl w-full p-8 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Quick Scan</h2>
+            <p className="text-gray-600 mb-4">Paste content from any platform and analyze it instantly</p>
             <textarea
-              className="w-full h-64 bg-[#0a0a0a] border-2 border-[#262626] p-4 text-white font-mono text-sm focus:outline-none focus:border-[#DC2626]"
+              className="w-full h-64 bg-white border border-gray-300 rounded-lg p-4 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder="Paste content here..."
               autoFocus
             />
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setQuickScanOpen(false)}
-                className="bg-[#DC2626] text-white px-6 py-2 font-bold hover:bg-[#B91C1C]"
+                className="bg-red-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-sm"
               >
-                ANALYZE
+                Analyze
               </button>
               <button
                 onClick={() => setQuickScanOpen(false)}
-                className="border-2 border-[#262626] px-6 py-2 font-bold hover:border-white"
+                className="border border-gray-300 bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
               >
-                CANCEL
+                Cancel
               </button>
             </div>
           </div>

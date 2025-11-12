@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = supabaseAdmin;
 
     // Get date 7 days ago
     const oneWeekAgo = new Date();
