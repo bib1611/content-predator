@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AppLayout from '@/components/AppLayout';
 import { ContentOpportunity } from '@/lib/supabase';
 
 export default function Dashboard() {
@@ -105,141 +106,156 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
-      {/* Header */}
-      <header className="border-b-2 border-[#262626] pb-6 mb-8">
-        <h1 className="text-4xl font-bold mb-2 tracking-tight">CONTENT PREDATOR</h1>
-        <p className="text-[#737373] text-lg">Hunt for blood in the digital wasteland</p>
-
-        {scanStatus && (
-          <div className="mt-4 flex items-center gap-4 text-sm font-mono">
-            <span className="text-[#737373]">
-              SCANS TODAY: <span className="text-white">{scanStatus.scans_today}/{scanStatus.daily_limit}</span>
-            </span>
-            <span className="text-[#737373]">
-              REMAINING: <span className={scanStatus.scans_remaining > 0 ? 'text-[#DC2626]' : 'text-[#737373]'}>
-                {scanStatus.scans_remaining}
-              </span>
-            </span>
-          </div>
-        )}
-      </header>
-
-      {/* Action Bar */}
-      <div className="mb-8 flex gap-4">
-        <Link
-          href="/scan"
-          className="inline-block bg-[#DC2626] text-white px-8 py-4 text-lg font-bold hover:bg-[#B91C1C] transition-colors border-2 border-[#DC2626]"
-        >
-          HUNT FOR BLOOD
-        </Link>
-        <Link
-          href="/studio"
-          className="inline-block border-2 border-[#DC2626] text-[#DC2626] px-8 py-4 text-lg font-bold hover:bg-[#DC2626] hover:text-white transition-colors"
-        >
-          CONTENT STUDIO
-        </Link>
-      </div>
-
-      {/* Opportunities */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6 border-b border-[#262626] pb-2">
-          TOP OPPORTUNITIES
-        </h2>
-
-        {loading ? (
-          <div className="text-[#737373] font-mono">Loading opportunities...</div>
-        ) : opportunities.length === 0 ? (
-          <div className="border-2 border-[#262626] p-8 text-center">
-            <p className="text-[#737373] text-lg mb-4">
-              Nothing worth your time. Hunt harder.
-            </p>
-            <Link
-              href="/scan"
-              className="inline-block bg-[#DC2626] text-white px-6 py-3 font-bold hover:bg-[#B91C1C] transition-colors"
-            >
-              RUN SCAN
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {opportunities.map((opp) => (
-              <div
-                key={opp.id}
-                className="border-2 border-[#262626] p-6 hover:border-[#DC2626] transition-colors"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-[#DC2626] font-bold font-mono text-2xl">
-                        {opp.priority_score}/10
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.opportunity_type}
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.platform}
-                      </span>
-                      <span className="bg-[#262626] px-3 py-1 text-sm font-mono uppercase">
-                        {opp.suggested_format}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl font-bold mb-2">{opp.hook}</h3>
-                    <p className="text-[#737373] mb-3">{opp.suggested_angle}</p>
-
-                    {opp.content_snippet && (
-                      <div className="bg-[#0a0a0a] border border-[#262626] p-3 mb-3 font-mono text-sm">
-                        {opp.content_snippet}
-                      </div>
-                    )}
-
-                    <p className="text-sm text-[#DC2626] font-bold">{opp.cta}</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => handleGenerate(opp)}
-                    disabled={generatingId === opp.id}
-                    className="bg-[#DC2626] text-white px-6 py-2 font-bold hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
-                  >
-                    {generatingId === opp.id ? 'WEAPONIZING...' : 'WEAPONIZE THIS'}
-                  </button>
-
-                  <button
-                    onClick={() => handleMarkUsed(opp.id)}
-                    className="border-2 border-[#262626] px-6 py-2 font-bold hover:border-white transition-colors"
-                  >
-                    MARK USED
-                  </button>
-                </div>
-
-                {/* Generated Content */}
-                {generatedContent[opp.id] && (
-                  <div className="mt-6 border-t-2 border-[#262626] pt-6">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-lg font-bold text-[#DC2626]">
-                        GENERATED {generatedContent[opp.id].format.toUpperCase()}
-                      </h4>
-                      <button
-                        onClick={() => copyToClipboard(generatedContent[opp.id].content)}
-                        className="bg-[#262626] px-4 py-2 text-sm font-bold hover:bg-[#737373] transition-colors"
-                      >
-                        COPY
-                      </button>
-                    </div>
-                    <div className="bg-[#0a0a0a] border border-[#262626] p-4 font-mono text-sm whitespace-pre-wrap">
-                      {generatedContent[opp.id].content}
-                    </div>
-                  </div>
-                )}
+    <AppLayout>
+      <div className="max-w-7xl mx-auto p-8">
+        {/* Header Stats */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          {scanStatus && (
+            <div className="flex items-center gap-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600">Scans today:</span>
+                <span className="font-semibold text-gray-900">{scanStatus.scans_today}/{scanStatus.daily_limit}</span>
               </div>
-            ))}
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600">Remaining:</span>
+                <span className={`font-semibold ${scanStatus.scans_remaining > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {scanStatus.scans_remaining}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <Link
+            href="/scan"
+            className="group p-6 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-md hover:shadow-lg transition-all text-white"
+          >
+            <div className="text-3xl mb-2">🎯</div>
+            <h3 className="text-xl font-bold mb-1">Hunt for Opportunities</h3>
+            <p className="text-red-100 text-sm">Scan social media for viral content ideas</p>
+          </Link>
+          <Link
+            href="/studio"
+            className="group p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md hover:shadow-lg transition-all text-white"
+          >
+            <div className="text-3xl mb-2">✨</div>
+            <h3 className="text-xl font-bold mb-1">Content Studio</h3>
+            <p className="text-blue-100 text-sm">Generate and refine marketing content</p>
+          </Link>
+        </div>
+
+        {/* Opportunities */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Top Opportunities
+            </h2>
+            <span className="text-sm text-gray-600">{opportunities.length} opportunities</span>
           </div>
-        )}
-      </section>
-    </main>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : opportunities.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+              <div className="text-6xl mb-4">🔍</div>
+              <p className="text-gray-600 text-lg mb-6">
+                No opportunities found. Run a scan to discover content ideas.
+              </p>
+              <Link
+                href="/scan"
+                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Run Your First Scan
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {opportunities.map((opp) => (
+                <div
+                  key={opp.id}
+                  className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 text-white font-bold text-lg rounded-lg">
+                          {opp.priority_score}
+                        </span>
+                        <div className="flex gap-2">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full uppercase">
+                            {opp.opportunity_type.replace('_', ' ')}
+                          </span>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full uppercase">
+                            {opp.platform}
+                          </span>
+                          <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full uppercase">
+                            {opp.suggested_format}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">{opp.hook}</h3>
+                      <p className="text-gray-600 mb-3">{opp.suggested_angle}</p>
+
+                      {opp.content_snippet && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3 text-sm text-gray-700">
+                          {opp.content_snippet}
+                        </div>
+                      )}
+
+                      <p className="text-sm text-red-600 font-medium">{opp.cta}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={() => handleGenerate(opp)}
+                      disabled={generatingId === opp.id}
+                      className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {generatingId === opp.id ? '⚡ Generating...' : '⚡ Weaponize This'}
+                    </button>
+
+                    <button
+                      onClick={() => handleMarkUsed(opp.id)}
+                      className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      ✓ Mark Used
+                    </button>
+                  </div>
+
+                  {/* Generated Content */}
+                  {generatedContent[opp.id] && (
+                    <div className="mt-6 border-t border-gray-200 pt-6">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-base font-bold text-gray-900 flex items-center">
+                          <span className="mr-2">✨</span>
+                          Generated {generatedContent[opp.id].format}
+                        </h4>
+                        <button
+                          onClick={() => copyToClipboard(generatedContent[opp.id].content)}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          📋 Copy
+                        </button>
+                      </div>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-800 whitespace-pre-wrap">
+                        {generatedContent[opp.id].content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </AppLayout>
   );
 }

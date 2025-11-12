@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AppLayout from '@/components/AppLayout';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -64,93 +64,96 @@ export default function ScanPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
-      <header className="border-b-2 border-[#262626] pb-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold mb-2 tracking-tight">HUNT FOR BLOOD</h1>
-            <p className="text-[#737373] text-lg">Manual intelligence gathering</p>
-          </div>
-          <Link
-            href="/"
-            className="border-2 border-[#262626] px-6 py-3 font-bold hover:border-white transition-colors"
-          >
-            BACK TO DASHBOARD
-          </Link>
-        </div>
-      </header>
+    <AppLayout>
+      <div className="max-w-5xl mx-auto p-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Content Scanner</h1>
+          <p className="text-gray-600">Analyze social media content to discover viral opportunities</p>
+        </header>
 
-      {/* Instructions */}
-      <section className="mb-8 border-2 border-[#DC2626] p-6">
-        <h2 className="text-xl font-bold mb-4 text-[#DC2626]">INSTRUCTIONS</h2>
-        <ol className="space-y-2 text-[#737373] list-decimal list-inside">
-          <li>Open X/Twitter in another tab. Copy your notifications and trending posts from your timeline.</li>
-          <li>Open Substack. Copy recent comments and replies from your posts.</li>
-          <li>Paste the data below. At least one field required.</li>
-          <li>Hit scan. Claude will analyze and extract opportunities.</li>
-          <li>Go weaponize the results.</li>
-        </ol>
-      </section>
+        {/* Instructions */}
+        <section className="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+            <span className="text-2xl mr-2">📋</span>
+            How to Scan
+          </h2>
+          <ol className="space-y-2 text-gray-700 list-decimal list-inside text-sm">
+            <li>Open X/Twitter in another tab and copy your notifications and trending posts</li>
+            <li>Open Substack and copy recent comments and replies from your posts</li>
+            <li>Paste the content below (at least one field required)</li>
+            <li>Click "Run Scan" and Claude AI will analyze the data</li>
+            <li>Review the discovered opportunities on your dashboard</li>
+          </ol>
+        </section>
 
       {/* Scan Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Twitter Notifications */}
-        <div>
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-lg font-bold">X/TWITTER NOTIFICATIONS</label>
+            <label className="text-base font-semibold text-gray-900 flex items-center">
+              <span className="text-xl mr-2">🐦</span>
+              X/Twitter Notifications
+            </label>
             <button
               type="button"
               onClick={() => handlePaste('notifications')}
-              className="bg-[#262626] px-4 py-2 text-sm font-bold hover:bg-[#737373] transition-colors"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
             >
-              PASTE FROM CLIPBOARD
+              📋 Paste from Clipboard
             </button>
           </div>
           <textarea
             value={formData.notifications}
             onChange={(e) => setFormData(prev => ({ ...prev, notifications: e.target.value }))}
             placeholder="Paste your X notifications here... mentions, replies, likes, etc."
-            className="w-full h-48 bg-[#0a0a0a] border-2 border-[#262626] p-4 text-white font-mono text-sm focus:border-[#DC2626] focus:outline-none resize-none"
+            className="w-full h-48 bg-gray-50 border border-gray-300 rounded-lg p-4 text-gray-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none resize-none"
           />
         </div>
 
         {/* Trending Posts */}
-        <div>
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-lg font-bold">TRENDING POSTS FROM YOUR TIMELINE</label>
+            <label className="text-base font-semibold text-gray-900 flex items-center">
+              <span className="text-xl mr-2">🔥</span>
+              Trending Posts from Timeline
+            </label>
             <button
               type="button"
               onClick={() => handlePaste('trendingPosts')}
-              className="bg-[#262626] px-4 py-2 text-sm font-bold hover:bg-[#737373] transition-colors"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
             >
-              PASTE FROM CLIPBOARD
+              📋 Paste from Clipboard
             </button>
           </div>
           <textarea
             value={formData.trendingPosts}
             onChange={(e) => setFormData(prev => ({ ...prev, trendingPosts: e.target.value }))}
-            placeholder="Paste 5-10 posts that are crushing it right now..."
-            className="w-full h-48 bg-[#0a0a0a] border-2 border-[#262626] p-4 text-white font-mono text-sm focus:border-[#DC2626] focus:outline-none resize-none"
+            placeholder="Paste 5-10 posts that are performing well right now..."
+            className="w-full h-48 bg-gray-50 border border-gray-300 rounded-lg p-4 text-gray-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none resize-none"
           />
         </div>
 
         {/* Substack Comments */}
-        <div>
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-lg font-bold">SUBSTACK COMMENTS & REPLIES</label>
+            <label className="text-base font-semibold text-gray-900 flex items-center">
+              <span className="text-xl mr-2">📰</span>
+              Substack Comments & Replies
+            </label>
             <button
               type="button"
               onClick={() => handlePaste('substackComments')}
-              className="bg-[#262626] px-4 py-2 text-sm font-bold hover:bg-[#737373] transition-colors"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
             >
-              PASTE FROM CLIPBOARD
+              📋 Paste from Clipboard
             </button>
           </div>
           <textarea
             value={formData.substackComments}
             onChange={(e) => setFormData(prev => ({ ...prev, substackComments: e.target.value }))}
             placeholder="Paste recent Substack engagement... what are people asking? What's resonating?"
-            className="w-full h-48 bg-[#0a0a0a] border-2 border-[#262626] p-4 text-white font-mono text-sm focus:border-[#DC2626] focus:outline-none resize-none"
+            className="w-full h-48 bg-gray-50 border border-gray-300 rounded-lg p-4 text-gray-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none resize-none"
           />
         </div>
 
@@ -159,14 +162,22 @@ export default function ScanPage() {
           <button
             type="submit"
             disabled={scanning || (!formData.notifications && !formData.trendingPosts && !formData.substackComments)}
-            className="bg-[#DC2626] text-white px-12 py-4 text-xl font-bold hover:bg-[#B91C1C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
-            {scanning ? 'SCANNING...' : 'RUN SCAN'}
+            {scanning ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Scanning...
+              </span>
+            ) : '🔍 Run Scan'}
           </button>
 
           {scanning && (
-            <span className="text-[#737373] font-mono animate-pulse">
-              Analyzing intelligence...
+            <span className="text-gray-600 text-sm animate-pulse">
+              Analyzing content with AI...
             </span>
           )}
         </div>
@@ -174,41 +185,66 @@ export default function ScanPage() {
 
       {/* Error Display */}
       {error && (
-        <div className="mt-8 border-2 border-[#DC2626] p-6 bg-[#DC2626]/10">
-          <h3 className="text-xl font-bold text-[#DC2626] mb-2">SCAN FAILED</h3>
-          <p className="text-white">{error}</p>
+        <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-red-900 mb-2 flex items-center">
+            <span className="text-xl mr-2">⚠️</span>
+            Scan Failed
+          </h3>
+          <p className="text-red-700">{error}</p>
         </div>
       )}
 
       {/* Success Display */}
       {result && (
-        <div className="mt-8 border-2 border-[#DC2626] p-6 animate-slideUp">
-          <h3 className="text-2xl font-bold text-[#DC2626] mb-4">SCAN COMPLETE</h3>
-          <div className="space-y-2 font-mono">
-            <p className="text-lg">
-              <span className="text-[#737373]">OPPORTUNITIES FOUND:</span>{' '}
-              <span className="text-white font-bold">{result.opportunities_found}</span>
+        <div className="mt-8 bg-green-50 border border-green-200 rounded-xl p-6 animate-fadeIn">
+          <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center">
+            <span className="text-2xl mr-2">✅</span>
+            Scan Complete!
+          </h3>
+          <div className="space-y-2">
+            <p className="text-base text-gray-700">
+              <span className="font-medium">Opportunities found:</span>{' '}
+              <span className="font-bold text-green-700">{result.opportunities_found}</span>
             </p>
-            <p className="text-lg">
-              <span className="text-[#737373]">SCAN DURATION:</span>{' '}
-              <span className="text-white font-bold">{result.scan_duration}s</span>
+            <p className="text-base text-gray-700">
+              <span className="font-medium">Scan duration:</span>{' '}
+              <span className="font-bold text-green-700">{result.scan_duration}s</span>
             </p>
-            <p className="text-[#737373] mt-4">Redirecting to dashboard...</p>
+            <p className="text-gray-600 mt-4 text-sm">Redirecting to dashboard...</p>
           </div>
         </div>
       )}
 
       {/* Tips */}
-      <section className="mt-12 border-t border-[#262626] pt-8">
-        <h3 className="text-xl font-bold mb-4">HUNTING TIPS</h3>
-        <ul className="space-y-2 text-[#737373]">
-          <li>• More data = better opportunities. Don't be lazy.</li>
-          <li>• Look for patterns in what people engage with vs. what they ignore.</li>
-          <li>• Pay attention to questions that get asked repeatedly but never answered well.</li>
-          <li>• Controversy and confrontation get engagement. Soft takes get ignored.</li>
-          <li>• Run scans daily. Social media moves fast.</li>
+      <section className="mt-12 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <span className="text-xl mr-2">💡</span>
+          Pro Tips
+        </h3>
+        <ul className="space-y-2 text-gray-700 text-sm">
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>More data leads to better opportunities - paste as much content as possible</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Look for patterns in high-engagement vs. low-engagement content</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Pay attention to frequently asked questions that lack good answers</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Controversial topics tend to generate more engagement</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Run scans daily to stay on top of trending topics</span>
+          </li>
         </ul>
       </section>
-    </main>
+      </div>
+    </AppLayout>
   );
 }

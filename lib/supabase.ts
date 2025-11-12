@@ -63,3 +63,50 @@ export interface GeneratedContent {
   engagement_actual: Record<string, any> | null;
   created_at: string;
 }
+
+export interface Conversation {
+  id: string;
+  title: string;
+  description: string | null;
+  icon: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+  favorite: boolean;
+  archived: boolean;
+  tags: string[];
+  message_count: number;
+  user_id: string | null;
+  workspace_id: string | null;
+  position: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversation_id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  content_type: 'text' | 'generated_content' | 'critique' | 'opportunity';
+  created_at: string;
+  edited_at: string | null;
+  opportunity_id: string | null;
+  generated_content_id: string | null;
+  metadata: Record<string, any>;
+  position: number;
+}
+
+export interface ConversationListView {
+  id: string;
+  title: string;
+  description: string | null;
+  icon: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+  favorite: boolean;
+  archived: boolean;
+  tags: string[];
+  message_count: number;
+  position: number;
+  last_message_preview: string | null;
+}
