@@ -5,11 +5,25 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+export type ContentFormat =
+  | 'tweet'
+  | 'thread'
+  | 'article'
+  | 'quote_tweet'
+  | 'poll_tweet'
+  | 'list_thread'
+  | 'story_thread'
+  | 'linkedin_post'
+  | 'linkedin_article'
+  | 'listicle'
+  | 'case_study'
+  | 'myth_buster';
+
 export interface GeneratedContentResult {
   content: string;
   hook: string;
   cta: string;
-  format: 'tweet' | 'thread' | 'article';
+  format: ContentFormat;
 }
 
 const CONTENT_TEMPLATES = {
@@ -136,11 +150,245 @@ FORMAT:
 ### Conclusion CTA:
 [CTA text]
 `,
+
+  quote_tweet: (opportunity: OpportunityAnalysis) => `
+Generate a quote tweet response for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+A quote tweet adds your take to someone else's post. Be confrontational but not petty.
+
+REQUIREMENTS:
+- Open with strong take that reframes or challenges the quoted post
+- Add depth or contrarian angle
+- Biblical principle or masculine truth
+- 250 characters maximum
+- Can reference "this take" or "this mindset" without being personal
+
+Return ONLY the quote tweet text.
+`,
+
+  poll_tweet: (opportunity: OpportunityAnalysis) => `
+Generate a Twitter poll for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+POLL STRUCTURE:
+1. Setup question (provocative, forces choice) - 150 chars max
+2. Four poll options (binary or spectrum choices)
+3. Optional: Follow-up context tweet
+
+REQUIREMENTS:
+- Question forces uncomfortable binary choice
+- Options reveal reader's beliefs
+- No "moderate" cop-out option
+- Setup is confrontational but fair
+
+FORMAT:
+[QUESTION]
+
+OPTIONS:
+- [Option 1]
+- [Option 2]
+- [Option 3]
+- [Option 4]
+
+[CONTEXT TWEET - optional, 250 chars]
+`,
+
+  list_thread: (opportunity: OpportunityAnalysis) => `
+Generate a numbered list thread (7-10 items) for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+Hook: ${opportunity.hook}
+
+THREAD STRUCTURE:
+1. Hook tweet: "X things about [topic] that [audience] won't tell you"
+2-10. Each item: Bold claim + one-sentence explanation
+Final. CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- Each item is confrontational truth
+- Specific, not vague principles
+- Mix of tactical and philosophical
+- 250 characters max per tweet
+- Number each (1., 2., 3., etc.)
+- NO soft language
+
+Return tweets separated by "---".
+`,
+
+  story_thread: (opportunity: OpportunityAnalysis) => `
+Generate a narrative story thread (8-12 tweets) for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+STORY STRUCTURE:
+1. Hook: Pattern interrupt that teases story
+2-3. Setup: Context, protagonist, situation
+4-6. Conflict: Problem, tension, stakes
+7-9. Climax: Turning point, decision made
+10-11. Resolution: Outcome, lesson learned
+12. Lesson + CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- True story or biblical narrative (not hypothetical)
+- Visceral details and specific moments
+- Clear masculine lesson
+- Conversational but not soft
+- 250 chars per tweet
+
+Return tweets separated by "---".
+`,
+
+  linkedin_post: (opportunity: OpportunityAnalysis) => `
+Generate a LinkedIn post for The Biblical Man brand (adapted for professional audience).
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+LINKEDIN VOICE:
+- Professional but direct (not corporate)
+- Challenges conventional wisdom in business/leadership
+- Biblical principles applied to work/leadership
+- Less visceral than Twitter, more authoritative
+
+STRUCTURE:
+- Hook (first 2 lines - shown in feed)
+- Problem statement (what leaders get wrong)
+- Biblical/historical perspective
+- Modern application to leadership/business
+- CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- 1300 characters maximum
+- Line breaks for readability
+- Can use one emoji max
+- Professional but confrontational
+
+Return complete post.
+`,
+
+  linkedin_article: (opportunity: OpportunityAnalysis) => `
+Generate a LinkedIn article outline for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+Similar to Substack article but for LinkedIn audience:
+- Professional leaders and executives
+- Biblical principles applied to business
+- Leadership, decision-making, culture
+- Less theological depth, more practical application
+
+OUTPUT:
+1. TITLE (SEO-friendly for business/leadership)
+2. HOOK PARAGRAPH (150 words)
+3. OUTLINE (5-7 sections for LinkedIn length)
+4. CTA: ${opportunity.cta}
+
+Professional but direct voice.
+`,
+
+  listicle: (opportunity: OpportunityAnalysis) => `
+Generate a listicle article for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+LISTICLE STRUCTURE:
+- TITLE: "X [Things] About [Topic] That [Audience] Need to Hear"
+- INTRO: 100-150 words, sets up the list
+- 7-10 ITEMS: Each with:
+  * Bold headline (confrontational statement)
+  * 2-3 paragraphs explaining
+  * Specific example or biblical reference
+- CONCLUSION + CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- Each item can stand alone
+- Confrontational but substantive
+- Mix of mindset and tactics
+- Scannable format
+
+Return full outline.
+`,
+
+  case_study: (opportunity: OpportunityAnalysis) => `
+Generate a case study article analyzing a specific example.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+CASE STUDY STRUCTURE:
+1. TITLE: "What [Person/Situation] Teaches Us About [Principle]"
+2. INTRODUCTION: Set up the case (biblical figure, historical leader, or modern example)
+3. CONTEXT: Situation and stakes
+4. ANALYSIS: What they did right/wrong through Biblical Man lens
+5. PRINCIPLES: 3-5 extracted lessons
+6. APPLICATION: How readers apply this today
+7. CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- Real example (biblical or historical preferred)
+- Deep analysis, not surface observation
+- Confrontational interpretations
+- Actionable principles
+
+Return full outline with section descriptions.
+`,
+
+  myth_buster: (opportunity: OpportunityAnalysis) => `
+Generate a "myth-busting" article for The Biblical Man brand.
+
+OPPORTUNITY CONTEXT:
+Type: ${opportunity.type}
+Description: ${opportunity.description}
+Angle: ${opportunity.angle}
+
+MYTH-BUSTER STRUCTURE:
+- TITLE: "X Lies About [Topic] (And The Truth They're Hiding)"
+- INTRO: Why these myths matter and who benefits from them
+- 5-7 MYTHS: For each:
+  * THE LIE: What culture/church teaches
+  * WHY IT'S WRONG: Biblical/historical evidence
+  * THE TRUTH: Confrontational reality
+  * WHAT TO DO: Practical application
+- CONCLUSION: Ties myths together, CTA: ${opportunity.cta}
+
+REQUIREMENTS:
+- Myths are commonly believed
+- Biblical/historical evidence for rebuttal
+- Not just contrarian, substantive
+- Forces uncomfortable conclusions
+
+Return full outline.
+`,
 };
 
 export async function generateContent(
   opportunity: OpportunityAnalysis,
-  format?: 'tweet' | 'thread' | 'article'
+  format?: ContentFormat
 ): Promise<GeneratedContentResult> {
   const contentFormat = format || opportunity.suggested_format;
   const template = CONTENT_TEMPLATES[contentFormat];
@@ -197,7 +445,7 @@ export async function regenerateWithFeedback(
   opportunity: OpportunityAnalysis,
   previousContent: string,
   feedback: string,
-  format: 'tweet' | 'thread' | 'article'
+  format: ContentFormat
 ): Promise<GeneratedContentResult> {
   const prompt = `
 You previously generated this content for The Biblical Man:
