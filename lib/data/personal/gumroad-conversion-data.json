@@ -39,7 +39,7 @@
       ],
       "page_count": {
         "minimum": 15,
-        "optimal": 20-30,
+        "optimal": "20-30",
         "maximum": 50,
         "reasoning": "Too short = low perceived value. Too long = won't finish."
       }
