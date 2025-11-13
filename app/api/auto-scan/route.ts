@@ -175,11 +175,23 @@ export async function POST(request: NextRequest) {
       }`,
     });
 
+    // Provide specific error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    let hint = 'Check server logs for details.';
+
+    if (errorMessage.includes('concurrent sessions limit')) {
+      hint = 'Browserbase concurrent session limit reached. Wait a few minutes for previous sessions to close, or upgrade your Browserbase plan.';
+    } else if (errorMessage.includes('BROWSERBASE_API_KEY')) {
+      hint = 'Check BROWSERBASE_API_KEY in .env.local file.';
+    } else if (errorMessage.includes('Timeout')) {
+      hint = 'Twitter scraping timed out. Twitter may require authentication. See AGENTIC_BROWSER_STATUS.md for solutions.';
+    }
+
     return NextResponse.json(
       {
         error: 'Auto-scan failed.',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        hint: 'Check BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID in environment variables.',
+        details: errorMessage,
+        hint,
       },
       { status: 500 }
     );

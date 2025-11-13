@@ -20,8 +20,8 @@ export async function createBrowserSession() {
     // Create a new session
     const session = await browserbase.sessions.create({
       projectId: process.env.BROWSERBASE_PROJECT_ID,
-      // Keep session alive for 30 minutes max
-      keepAlive: true,
+      // Don't keep session alive - let it close automatically when done
+      // This prevents hitting concurrent session limits
     });
 
     return {
@@ -66,10 +66,10 @@ export async function closeBrowserSession(browser: any, sessionId?: string) {
   try {
     await browser.close();
 
-    // Optionally stop the session on Browserbase
+    // Note: Browserbase sessions auto-cleanup after keepAlive expires
+    // The SDK doesn't have a stop() method, sessions end when browser closes
     if (sessionId) {
-      const browserbase = getBrowserbaseClient();
-      await browserbase.sessions.stop(sessionId);
+      console.log(`Browser session ${sessionId} closed - will auto-cleanup on Browserbase`);
     }
   } catch (error) {
     console.error('Failed to close browser session:', error);
