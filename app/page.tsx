@@ -116,7 +116,8 @@ export default function Dashboard() {
   const handleAutoScan = async () => {
     setAutoScanning(true);
     try {
-      const response = await fetch('/api/auto-scan', {
+      // Use simplified auto-scan (bypasses Browserbase complexity)
+      const response = await fetch('/api/auto-scan-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -125,7 +126,7 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (data.success) {
-        alert(`Auto-scan complete! Found ${data.opportunities_found} opportunities from ${data.content_scraped} scraped posts.`);
+        alert(`Auto-scan complete! Found ${data.opportunities_found} opportunities from ${data.content_scanned} posts.`);
         // Refresh opportunities and scan status
         await fetchOpportunities();
         await fetchScanStatus();
