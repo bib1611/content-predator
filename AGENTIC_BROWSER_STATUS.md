@@ -27,9 +27,27 @@
 
 ---
 
+## ✅ Recently Fixed
+
+### Fix #1: Browserbase Session Cleanup Error
+**Was:** `browserbase.sessions.stop is not a function`
+**Fixed:** Removed the stop() call. Sessions auto-cleanup when browser closes.
+
+### Fix #2: Concurrent Session Limit (429 Error)
+**Was:** Sessions staying open with `keepAlive: true`, hitting 1-session limit
+**Fixed:** Removed keepAlive flag. Sessions close automatically after use.
+
+### Fix #3: Better Error Messages
+**Added:** Specific hints for common errors:
+- Concurrent limit → "Wait a few minutes or upgrade plan"
+- API key missing → "Check .env.local"
+- Twitter timeout → "Requires authentication"
+
+---
+
 ## ⚠️ Current Issues
 
-### Issue #1: Twitter Timeout (Primary Blocker)
+### Issue #1: Twitter Timeout (Primary Blocker - Still Needs Fix)
 **Error:**
 ```
 page.goto: Timeout 30000ms exceeded
@@ -53,27 +71,6 @@ Twitter is blocking unauthenticated automated browsers. The page won't load with
 3. **Increase timeout and wait for login prompt**
    - Handle Twitter's CAPTCHA/login flow programmatically
    - More complex, less reliable
-
-### Issue #2: Browserbase SDK API Mismatch
-**Error:**
-```
-browserbase.sessions.stop is not a function
-```
-
-**Root Cause:**
-The `@browserbasehq/sdk` API doesn't have a `stop()` method in the current version.
-
-**Fix:**
-Update `lib/browserbase.ts` line 72:
-```typescript
-// OLD (doesn't work):
-await browserbase.sessions.stop(sessionId);
-
-// NEW (try this):
-await browserbase.sessions.update(sessionId, { status: 'STOPPED' });
-```
-
-Or simply remove the session stop call and let Browserbase auto-cleanup after timeout.
 
 ---
 
