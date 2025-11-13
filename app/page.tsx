@@ -24,6 +24,7 @@ export default function Dashboard() {
   }>({});
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [quickScanOpen, setQuickScanOpen] = useState(false);
+  const [autoScanning, setAutoScanning] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     platform: 'all',
     type: 'all',
@@ -107,6 +108,33 @@ export default function Dashboard() {
       setScanStatus(data);
     } catch (error) {
       console.error('Failed to fetch scan status:', error);
+    }
+  };
+
+  const handleAutoScan = async () => {
+    setAutoScanning(true);
+    try {
+      const response = await fetch('/api/auto-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`Auto-scan complete! Found ${data.opportunities_found} opportunities from ${data.content_scraped} scraped posts.`);
+        // Refresh opportunities and scan status
+        await fetchOpportunities();
+        await fetchScanStatus();
+      } else {
+        alert(`Auto-scan failed: ${data.error}\n\n${data.hint || ''}`);
+      }
+    } catch (error) {
+      console.error('Auto-scan failed:', error);
+      alert('Auto-scan failed. Check console for details.');
+    } finally {
+      setAutoScanning(false);
     }
   };
 
@@ -262,6 +290,21 @@ export default function Dashboard() {
             >
               Scan for Opportunities
             </Link>
+            <button
+              onClick={handleAutoScan}
+              disabled={autoScanning}
+              className="bg-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              {autoScanning ? 'Auto-Scanning...' : 'Auto-Scan (AI)'}
+            </button>
             <Link
               href="/studio"
               className="border border-gray-300 bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"

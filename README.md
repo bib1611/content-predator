@@ -52,6 +52,33 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Features
 
+### 🤖 Auto-Scan (NEW - Agentic Browser Integration)
+
+**Fully automated content discovery with zero manual work.**
+
+Content Predator now includes an **AI-powered auto-scan** feature using Browserbase (headless browser service) to automatically scrape Twitter for trending content in your niche.
+
+**How it works:**
+1. Click "Auto-Scan (AI)" button on dashboard
+2. Browserbase launches a headless browser session
+3. Searches Twitter for biblical masculinity, Christian men content
+4. Scrapes 20+ tweets with engagement metrics
+5. Claude analyzes and extracts opportunities
+6. Saves directly to your dashboard - ready to weaponize
+
+**Setup:**
+```bash
+# Add to .env.local
+BROWSERBASE_API_KEY=your_browserbase_key
+BROWSERBASE_PROJECT_ID=your_project_id
+```
+
+Get your Browserbase account at [browserbase.com](https://www.browserbase.com) (free tier available).
+
+**Cost:** ~$0.30 per auto-scan (vs $5,000/month for Twitter API)
+
+📖 **Full documentation:** See `AUTO_SCAN_GUIDE.md`
+
 ### Manual Intelligence Gathering
 
 Since X API costs $5000/month and Substack has no API, this uses a manual process:
