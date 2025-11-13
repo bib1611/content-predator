@@ -9,6 +9,7 @@ import StatsWidget from './components/StatsWidget';
 import OpportunityFilters, { FilterState } from './components/OpportunityFilters';
 import ContentVariations from './components/ContentVariations';
 import ProductCreator from './components/ProductCreator';
+import TwitterAuthModal from './components/TwitterAuthModal';
 
 export default function Dashboard() {
   const [opportunities, setOpportunities] = useState<ContentOpportunity[]>([]);
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [showProductCreator, setShowProductCreator] = useState(false);
   const [productCreatorContext, setProductCreatorContext] = useState<string>('');
+  const [showTwitterAuth, setShowTwitterAuth] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
@@ -305,6 +307,15 @@ export default function Dashboard() {
               </svg>
               {autoScanning ? 'Auto-Scanning...' : 'Auto-Scan (AI)'}
             </button>
+            <button
+              onClick={() => setShowTwitterAuth(true)}
+              className="border border-blue-600 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Connect X
+            </button>
             <Link
               href="/studio"
               className="border border-gray-300 bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
@@ -532,6 +543,16 @@ export default function Dashboard() {
           onClose={() => setShowProductCreator(false)}
         />
       )}
+
+      {/* Twitter Auth Modal */}
+      <TwitterAuthModal
+        isOpen={showTwitterAuth}
+        onClose={() => setShowTwitterAuth(false)}
+        onSuccess={() => {
+          // Refresh opportunities after successful auth
+          fetchOpportunities();
+        }}
+      />
 
       {/* Content Variations Modal */}
       {showVariations && (
